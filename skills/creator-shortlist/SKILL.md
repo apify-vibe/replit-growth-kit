@@ -133,10 +133,15 @@ signs, not proof:
   engagement pod. Do not apply this to TikTok, where comment ratios run naturally lower.
 - More than half of the recent posts marked as paid partnerships: audience fatigue.
 - Outside the band, the language or the geography the builder asked for.
+- Off-niche: fewer than 3 of their last 12 posts are about the niche, judged from captions and
+  hashtags.
 
-**Contacts.** Take only a business email the creator published: in the bio, the channel's about
-page, or one hop to their link-in-bio page. Stop there. Never guess an address from a name, and
-never hunt for a personal one.
+**Contacts.** Take only a business email the creator published: in the bio or post captions you
+already have, or on their own linked website or link-in-bio page. For the linked sites, run one
+gated `vdrmota/contact-info-scraper` step over the survivors' external URLs with `maxDepth: 1`
+and `sameDomain: true`; YouTube's about-page email sits behind a sign-in, so the linked site is
+the reliable route. Stop there. Never guess an address from a name, and never hunt for a
+personal one.
 
 **Fit note.** One line per creator: what they already post that overlaps the product, and which
 recent post shows the format to brief.
@@ -145,8 +150,8 @@ If fewer than 15 creators survive, run one widening pass (a new gate) with two o
 audience terms before delivering a short list, and say in the report that the niche is thin.
 
 Rank the keepers by median engagement. Reference bands for 10K to 100K accounts, for orientation
-only: TikTok healthy above 4%, strong above 8%; Instagram healthy above 3%, strong above 6%;
-YouTube healthy above 2%.
+only: TikTok healthy above 6%, strong above 12% (play-based rates run high); Instagram healthy
+above 3%, strong above 6%; YouTube healthy above 2%.
 
 ### 7. Deliver the shortlist
 
@@ -155,7 +160,8 @@ header, the report explains why it is short):
 
 - `creator-shortlist.csv`: `platform`, `handle`, `profile_url`, `followers`,
   `engagement_rate_median`, `engagement_min`, `engagement_max`, `posts_used`, `posts_last_60d`,
-  `sponsored_share`, `contact_email`, `contact_source`, `top_post_url`, `fit_note`, `status`
+  `sponsored_share` (blank on YouTube, which has no paid-partnership flag), `contact_email`,
+  `contact_source`, `top_post_url`, `fit_note`, `status`
   (`shortlisted` or `rejected`), `reject_reason`, `source_actor`, `source_run_id`.
 - `creator-shortlist.md`: the 15 to 30 keepers ranked by engagement and grouped by platform, with
   the per-post numbers for each so a human can check the maths; then the rejected creators with

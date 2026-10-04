@@ -128,7 +128,9 @@ Collection notes that matter:
 - **Ads:** collect only from the verified advertiser identity from step 4: the Facebook page
   linked from their site for Meta, and their **domain** (never the brand name) for Google, then
   check the returned advertiser name matches. A name search returned a different company in
-  testing. Currently active ads show what they are paying to say now.
+  testing. The same applies to LinkedIn ads and LinkedIn jobs: use the company page URL or ID from
+  step 4, never the brand name ("Vanta" also returned Vantage and Vantaca), and drop rows whose
+  company name does not match. Currently active ads show what they are paying to say now.
 - **Hiring:** count open roles by department and team. Ten new sales roles and no engineering roles
   is a strategy statement.
 

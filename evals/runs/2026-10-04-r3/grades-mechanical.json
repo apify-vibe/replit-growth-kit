@@ -1,0 +1,37 @@
+[
+  {
+    "id": "lead-good-maps",
+    "skill": "open-web-lead-engine",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 2,
+    "runs_listed": 2,
+    "cost_usd": 0.947,
+    "ungated_runs": [],
+    "ua_attributed": "2/2",
+    "runs": [
+      {
+        "run": "tXpsPKDEjkgTmL9KA",
+        "status": "SUCCEEDED",
+        "usd": 0.0982,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "58hM2Tfnje2uYogrv",
+        "status": "SUCCEEDED",
+        "usd": 0.8488,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      }
+    ],
+    "main_rows": 5,
+    "G6_rows_ok": false,
+    "G5_prov": {
+      "url_col": "source_url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "5/5"
+  }
+]

@@ -37,3 +37,19 @@
 - [lead] Agencies and other service businesses often have Maps listings: lane A is valid for "business type in a city" even outside retail/hospitality; lane C is for categories without map presence.
 - [lead] "Active social presence" is undefined in practice (no last-post date in Maps output). Rename to "social presence": a linked profile with >= 500 followers scores 10; say activity is not checked.
 - [all] Non-spend confirmations (product summary, competitor shortlist, angle pick) are plain AskQuestion confirmations, not spend gates; log them in transcript, not as spend in approvals.
+
+## Round 2 findings (lead-good-maps regression: 3 leads, bar 10)
+- [lead] REVERTED: department filter ["c_suite","operations"] cut yield from 10/100 places to 3/162 (parent-company executives). Default now empty; role filtering stays in step 6; department filter only for 50+ staff companies.
+- [lead] Chains/host businesses (hotel, department store restaurants) returned corporate execs: chain exclusion rule added.
+- [lead] Booking/ordering platforms listed as website: treat as no website.
+- [lead] "Business contact" undefined: lead = named decision-maker + personal or published business email, `email_type` column; phone-only -> review.
+- [lead] Size signal undefined for local: 100+ Google reviews.
+- [runtime] users/me plan.id FREE vs plan.tier DIAMOND confusion: use plan.tier. Price path now includes `.tieredEventPriceUsd`.
+- [demand] r2 PASS. Minor: Reddit Actor `maxItems` is global across start URLs and comments count as items; the first subreddit can eat the cap. Run one subreddit per run (sequential) or set per-run caps per subreddit. YouTube comments carry relative dates only: store `posted_at` blank + `posted_relative`.
+- [creator] r2 youtube PASS (19 vs 8). Email collection used curl outside gates: now a gated `vdrmota/contact-info-scraper` step over linked sites (maxDepth 1). YouTube has no paid-partnership flag: sponsored_share blank there.
+- [teardown] Brand-name collisions on LinkedIn (Vanta -> Vantage, Vantaca): LinkedIn jobs and LinkedIn ads must use the company URL/ID resolved in step 4 and verify the returned company/advertiser name; drop non-matching rows.
+
+## Round 2/3 results and doc fixes
+- [creator] r2 tiktok PASS (30, 26 emails; IG 8 vs 1). TikTok /video uses `resultsPerPage` (default 1), not maxProfilesPerQuery: fixed example. TikTok bands raised (6%/12%; 16 of 22 keepers beat 8%). Off-niche rule added (>=3 of last 12 posts on niche).
+- [lead] r3 maps 5 leads (bar 10), last fix round. Chain rule removed 32 of 101 places, staff filter 21 people: correctness up, count down. Yield doc corrected to measured 5-10 per 100 places. Decision-maker titles defined; `invalid` email -> not a lead. v2: owner-name discovery from the business website (ai-web-scraper) to convert review rows into leads.
+- [teardown] r1 edge: gates.log timestamps hand-written by the subject (grader cannot verify order); runner artifact, not skill behaviour.

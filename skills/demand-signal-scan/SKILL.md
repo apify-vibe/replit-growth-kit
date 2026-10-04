@@ -91,13 +91,15 @@ to 10 videos, 50 comments each; Hacker News 30 stories; search 2 pages per phras
   shaped `site:reddit.com/r <phrase>`, and read the subreddit out of each URL. Then search
   **inside** the 3 to 5 most relevant subreddits with subreddit search URLs
   (`https://www.reddit.com/r/<sub>/search/?q=<phrase>&restrict_sr=1&t=year`); that reached 62%
-  relevant in testing. Run Reddit jobs one at a time.
+  relevant in testing. Run one subreddit per run, one run at a time: the Actor's item cap is shared
+  across all start URLs and comments count toward it, so the first subreddit can use it all up.
 - **X:** one pass sorted `Latest` for warm threads, one sorted `Top` for phrasing. Set
   `minimumFavorites: 2` from the start and add `-giveaway -promo -discount` style exclusions;
   unfiltered X searches come back mostly as vendor promotion.
 - **YouTube:** comments under tutorials are mostly thanks, not complaints. Find **complaint-shaped**
   videos instead (`"why I quit <workaround>"`, `"<competitor> honest review"`, `"stopped using
-  <competitor>"`), then pull their comments with the dedicated comments Actor.
+  <competitor>"`), then pull their comments with the dedicated comments Actor. Comments carry relative dates only
+  ("3 months ago"); keep that text rather than inventing a date.
 - **Hacker News:** for technical audiences; `Ask HN` and `Show HN` threads carry both the pain and
   the competitors.
 

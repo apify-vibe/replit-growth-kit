@@ -9,12 +9,13 @@ server in the 90 days to early October 2026.
 ### TikTok: `clockworks/tiktok-scraper` (10.8K MCP users)
 
 ```json
-{"searchQueries":["study with me","productivity routine"],"searchSection":"/video","maxProfilesPerQuery":30,"videoSearchDateFilter":"PAST_MONTH","shouldDownloadVideos":false,"commentsPerPost":0}
+{"searchQueries":["study with me","productivity routine"],"searchSection":"/video","resultsPerPage":30,"videoSearchDateFilter":"PAST_MONTH","shouldDownloadVideos":false,"commentsPerPost":0}
 ```
 
 | Field | Use |
 |---|---|
 | `searchSection` | `/video` for content-first discovery. `/user` surfaces brands and dormant accounts. |
+| `resultsPerPage` | Videos per search term in `/video` mode. **Defaults to 1**; `maxProfilesPerQuery` does not apply here. |
 | `videoSearchDateFilter` | Live enum (`PAST_MONTH`, `LAST_3_MONTHS`, ...), never a number string like `"60"` |
 | `shouldDownloadVideos`, `commentsPerPost` | Leave off; they add cost and nothing to the ranking |
 
@@ -83,7 +84,7 @@ median, min, max and posts used.
 
 | Platform | Healthy | Strong |
 |---|---|---|
-| TikTok | above 4% | above 8% |
+| TikTok | above 6% | above 12% |
 | Instagram | above 3% | above 6% |
 | YouTube | above 2% | above 4% |
 

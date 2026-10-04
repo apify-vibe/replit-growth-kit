@@ -31,10 +31,11 @@ schema, check that the chosen mode returns the row type you need (posts, not has
 and read its current pricing for every event and add-on you plan to enable.
 
 Quote the builder's real price, not the list price. Read the account tier from
-`GET /v2/users/me` (`plan.tier`: FREE, BRONZE, SILVER, GOLD, PLATINUM or DIAMOND), then the
-per-event price for that tier from `GET /v2/acts/<owner>~<name>` under
-`pricingInfos[-1].pricingPerEvent.actorChargeEvents.<event>.eventTieredPricingUsd.<tier>`. If
-either is unreadable, quote the FREE price and say it is a ceiling.
+`GET /v2/users/me` → `plan.tier` (FREE, BRONZE, SILVER, GOLD, PLATINUM or DIAMOND; use `tier`,
+not `plan.id`, which can differ). Then read the per-event price for that tier from
+`GET /v2/acts/<owner>~<name>` at
+`pricingInfos[-1].pricingPerEvent.actorChargeEvents.<event>.eventTieredPricingUsd.<tier>.tieredEventPriceUsd`.
+If either is unreadable, quote the FREE price and say it is a ceiling.
 
 Substitute another Actor only when the named one is unavailable or cannot return the needed rows.
 Show the builder why, and compare output, price and recent reliability before gating it.
