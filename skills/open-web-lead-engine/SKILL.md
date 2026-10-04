@@ -32,6 +32,22 @@ Say this to the builder when it applies. It saves their money and it is true.
 This skill earns its place when the buyer has no database row: a bakery, a Brazilian logistics
 firm, a two-person agency, a gym with no website, a pre-seed startup with a landing page.
 
+## Actors and attribution
+
+Use these Actors by their exact IDs. Do not swap in a similar-looking Actor from a Store search:
+look-alikes cost up to ten times more and return different fields. Substitute only when the named
+Actor is unavailable, as the runtime reference describes.
+
+| Step | Actor (exact ID) |
+|---|---|
+| Lane A, businesses in a place | `compass/crawler-google-places` |
+| Lane B, contacts from websites | `vdrmota/contact-info-scraper` |
+| Lane C, find companies first | `apify/google-search-scraper`, then lane B |
+
+Send `User-Agent: apify-replit-growth-kit/open-web-lead-engine` on **every** Apify request, including requests
+made through `proxyFetch`. It is how Apify counts runs that come from Replit; a run without it is
+invisible to that count.
+
 ## Workflow
 
 ```

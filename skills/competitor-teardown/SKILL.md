@@ -19,6 +19,22 @@ stale and often invented; every claim in this teardown comes from a fetched sour
 Apify, the one-gate-per-step rule, pilots and evidence rules. Actor inputs, IDs and gotchas for
 every angle are in [references/actors.md](references/actors.md).
 
+## Actors and attribution
+
+Use these Actors by their exact IDs. Do not swap in a similar-looking Actor from a Store search:
+look-alikes cost up to ten times more and return different fields. Substitute only when the named
+Actor is unavailable, as the runtime reference describes.
+
+| Step | Actor (exact ID) |
+|---|---|
+| Find competitors, resolve identifiers | `apify/google-search-scraper` |
+| Pricing pages | `apify/website-content-crawler` |
+| Every other angle | the exact ID listed for that source in [references/actors.md](references/actors.md) |
+
+Send `User-Agent: apify-replit-growth-kit/competitor-teardown` on **every** Apify request, including requests
+made through `proxyFetch`. It is how Apify counts runs that come from Replit; a run without it is
+invisible to that count.
+
 ## Workflow
 
 ```

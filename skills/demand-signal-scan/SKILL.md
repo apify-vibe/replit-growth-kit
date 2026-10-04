@@ -19,6 +19,24 @@ cold email subject lines stop being guesses, and the landing page can quote a re
 Apify, the one-gate-per-step rule, pilots and evidence rules. Actor inputs and traps are in
 [references/actors.md](references/actors.md).
 
+## Actors and attribution
+
+Use these Actors by their exact IDs. Do not swap in a similar-looking Actor from a Store search:
+look-alikes cost up to ten times more and return different fields. Substitute only when the named
+Actor is unavailable, as the runtime reference describes.
+
+| Step | Actor (exact ID) |
+|---|---|
+| Probe, find subreddits, search lane | `apify/google-search-scraper` |
+| Reddit | `trudax/reddit-scraper-lite`; fallback `fatihtahta/reddit-scraper-search-fast` |
+| X | `apidojo/tweet-scraper` |
+| YouTube videos, then their comments | `streamers/youtube-scraper`, then `streamers/youtube-comments-scraper` |
+| Hacker News | `ryanclinton/hackernews-search` |
+
+Send `User-Agent: apify-replit-growth-kit/demand-signal-scan` on **every** Apify request, including requests
+made through `proxyFetch`. It is how Apify counts runs that come from Replit; a run without it is
+invisible to that count.
+
 ## Workflow
 
 ```
