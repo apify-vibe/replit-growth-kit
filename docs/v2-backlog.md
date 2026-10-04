@@ -25,6 +25,9 @@ Ideas that are worth doing and are deliberately out of the v1 ship decision
 - **Teardown: brand-collision guard as code.** Verify returned company and advertiser names
   against the identifier table automatically.
 
+- **Creator shortlist: professional niches.** For B2B-adjacent audiences (restaurant owners and
+  GMs), most creators who speak to the buyer sit under 10K followers (Replit acceptance run 4: 6
+  of 8 relevant individuals). Offer a 2K to 10K micro band when the audience is a profession.
 - Competitor page diffing over time (needs a stored baseline and a schedule).
 - Scheduled re-runs for demand-signal-scan (watch language shift monthly).
 - Replit's offline harness (`evaluations/` in the Repl): structural helper `research-output.mjs`
