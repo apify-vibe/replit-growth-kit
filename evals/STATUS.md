@@ -106,6 +106,15 @@ The attribution question for Bára is answered by real runs: runs launched from 
 the Replit Apify integration carry `meta.userAgent = apify-replit-growth-kit/<skill>` with
 origin `API`.
 
+## Post-run fix (2026-10-04 morning): run starts failing from Replit
+
+Lukas's first test drive hit errors on most Actor starts. Root cause, reproduced inside Replit with
+a 6-call matrix: Replit's `proxyFetch` does not set `Content-Type: application/json` on a POST, and
+Apify rejects the run with HTTP 400 `invalid-input: Actor input must have content type
+"application/json"`. The overnight runs only worked when Agent added the header on its own.
+Fixed in commit `587b91b`: every SKILL.md and the runtime reference now state both required
+headers and the canonical run-start shape. Zip and Replit bundle rebuilt.
+
 ## Spend
 
 | Phase | Apify spend |

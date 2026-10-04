@@ -10,7 +10,10 @@ should push back. None of them repeat the overnight acceptance runs.
 2. Make sure the Apify integration is connected to the workspace.
 3. Paste each request as written. Don't name the skill: part of the test is Agent picking it.
 4. Answer the approval forms yourself. Watching what a founder sees at each gate is half the point.
-5. If you want to know which copy Agent loaded, ask it afterwards: "Which skill file path did you
+5. Use the latest zip or bundle (commit `587b91b` or later). Earlier copies miss the
+   `Content-Type: application/json` rule, and Actor starts fail with HTTP 400 "Actor input must
+   have content type application/json".
+6. If you want to know which copy Agent loaded, ask it afterwards: "Which skill file path did you
    use?" It should say `.agents/skills/...`.
 
 ## Test apps
