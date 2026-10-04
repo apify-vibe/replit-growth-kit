@@ -28,8 +28,13 @@ follow the `integrations` recovery steps before re-authorising or switching to a
 
 Before building any input: resolve the Actor named in `actors.md`, read its current input
 schema, check that the chosen mode returns the row type you need (posts, not hashtag metadata),
-and read its current pricing and every add-on you plan to enable. Never assume the builder's
-account tier; if it is unknown, say so and estimate conservatively.
+and read its current pricing for every event and add-on you plan to enable.
+
+Quote the builder's real price, not the list price. Read the account tier from
+`GET /v2/users/me` (`plan.tier`: FREE, BRONZE, SILVER, GOLD, PLATINUM or DIAMOND), then the
+per-event price for that tier from `GET /v2/acts/<owner>~<name>` under
+`pricingInfos[-1].pricingPerEvent.actorChargeEvents.<event>.eventTieredPricingUsd.<tier>`. If
+either is unreadable, quote the FREE price and say it is a ceiling.
 
 Substitute another Actor only when the named one is unavailable or cannot return the needed rows.
 Show the builder why, and compare output, price and recent reliability before gating it.
@@ -43,9 +48,24 @@ a plain chat question. The gate lists every run in that step:
 |---|---|
 | Actor, the input in one line, expected items, per-run cap | total expected items, total cost ceiling |
 
+Confirmations that cost nothing (the product summary, the competitor shortlist, the angles to
+cover) are ordinary questions, not spend gates.
+
 Cap every run with the API run options `maxItems` and `maxTotalChargeUsd` (the latter applies to
 every pricing model), plus the Actor's own result or page caps, because several Actors default
-those to 1,000 or more. A `FREE` Actor still costs platform usage, so it appears in the gate too.
+those to 1,000 or more, and a few ignore `maxItems`. Some Actors reject a `maxTotalChargeUsd`
+below their own minimum (observed: $0.25 to $0.50). Use that minimum: it is a ceiling, not a
+charge. A `FREE` Actor still costs platform usage, so it appears in the gate too.
+
+Running the step:
+- Launch each run, then poll `GET /v2/actor-runs/<id>` until it reaches a terminal status
+  (`SUCCEEDED`, `FAILED`, `TIMED-OUT`, `ABORTED`). `waitForFinish` can return while a run is still
+  `READY` or `RUNNING`; that is not a result.
+- If a launch call errors, list the Actor's runs from the last few minutes before trying again.
+  The first launch may have started; reuse it instead of paying twice.
+- Run browser crawls and Reddit jobs one after another, not all at once. Parallel crawls can
+  exhaust the account's memory (HTTP 402) and parallel Reddit jobs get rate limited.
+- Re-read a finished run a few seconds later before reporting cost; counters lag.
 
 Rules that make the gate mean something:
 - Send exactly the runs you showed. A changed input, a raised cap, a retry, an extra platform or
@@ -58,10 +78,19 @@ Rules that make the gate mean something:
 ## 4. Pilot uncertain lanes
 
 When a search might return off-target rows (keyword discovery, new communities, a new country),
-run a 10 to 20 item pilot first, inside its own gate. Count relevant rows against criteria you
-wrote down before the run. Below 50% relevant: stop that lane and report the pilot; do not scale
-it. Scaling a good pilot is a new gate.
+run a 10 to 20 item pilot first, inside its own gate. Before it runs, write down what counts as
+relevant. Then count:
 
+- **Unit:** count threads, companies or creators, not raw rows. A Reddit post with its replies is
+  one thread; it is relevant when the post or a top comment states the problem. Directories and
+  listicles never count as companies.
+- **Bar:** 50% relevant for searches and directories; 30% for conversational platforms (Reddit,
+  X, YouTube comments), where off-topic replies are normal.
+- **Below the bar:** rewrite the query once (new gate) using what the pilot showed. Below the bar
+  twice: stop that lane and report the pilot; do not scale it. A failed lane is a collection
+  failure, not proof that nobody cares.
+
+Scaling a good pilot is a new gate.
 ## 5. Evidence rules
 
 - Every output row carries its source URL (or handle), Actor ID and run ID. Take timestamps and

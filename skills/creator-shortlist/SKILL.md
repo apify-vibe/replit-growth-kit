@@ -80,15 +80,18 @@ Search **content**, not profiles: recent posts in the audience's own language su
 actually making that content. Profile search returns brands and dormant accounts.
 
 - **TikTok:** video search in the audience's language, recent window.
-- **Instagram:** hashtag **page URLs** (`https://www.instagram.com/explore/tags/<tag>/`) in the
-  general scraper. Do not use its `search` + `searchType: "hashtag"` mode: in testing it returned
-  hashtag metadata, not posts.
+- **Instagram:** keyword search over **popular reels** (`apify/instagram-search-scraper`,
+  `searchType: "popular"`), in the audience's words. In testing, half of the reel authors it found
+  sat inside the follower band; hashtag pages return the "recent" tab, which is mostly brands and
+  tiny accounts (1 of 27 in band). Never use the general scraper's `search` + `searchType:
+  "hashtag"` mode: it returns hashtag metadata, not posts.
 - **YouTube:** video search for the audience's topics, sorted by relevance, within the last year.
 
 Pilot each platform with 10 to 20 posts in one gate. Relevant means the post is about the niche
-and the author is a person, not a brand, an app or a supplier. Below 50% relevant, stop that
-platform and rewrite the terms (new gate). Then scale to about 3 terms × 30 posts per platform in
-one gate. Collect the authors, drop brands and off-niche accounts, and keep up to 40 for step 5.
+and the author is a person, not a brand, an app or a supplier. Count authors, not posts, and use
+the pilot bar and one-rewrite rule from the runtime reference. Then scale to about 3 terms × 30
+posts per platform in one gate. Collect the authors, drop brands and off-niche accounts, and keep
+up to 40 for step 5.
 
 ### 5. Pull recent posts for survivors (gated)
 
@@ -99,7 +102,9 @@ Only now pay per profile, and only for the survivors:
   paid-partnership flags.
 - **TikTok:** `clockworks/tiktok-scraper` with the handles, 12 latest videos each,
   `excludePinnedPosts: true`, author metadata on.
-- **YouTube:** `streamers/youtube-channel-scraper` with the channel URLs, 12 latest videos each.
+- **YouTube:** `streamers/youtube-scraper` with the channel URLs, 12 latest videos each. It
+  returns per-video likes, comments and views. (The channel scraper returns neither likes nor
+  comment counts, so engagement cannot be computed from it.)
 
 ### 6. Compute engagement, flag, rank, collect contacts
 
@@ -112,7 +117,8 @@ Instagram per post:  (likesCount + commentsCount) / followersCount
 YouTube   per video: (likes + comments) / viewCount
 ```
 
-Leave out pinned posts: they are a creator's best-ever results and inflate every rate. Use the
+Leave out pinned posts: they are a creator's best-ever results and inflate every rate. YouTube
+returns no pinned flag; say so in the report. Use the
 **median** of up to the 12 most recent remaining posts, not the mean, so one viral hit does not
 hide a creator whose normal post lands flat. Report the median, the min to max range, and the
 number of posts used. A post missing its denominator is skipped, not estimated; if fewer than 6
@@ -123,7 +129,8 @@ signs, not proof:
 
 - Fewer than 3 posts in the last 60 days: dormant.
 - Under 1% engagement with over 50,000 followers: audience not engaging, possibly bought.
-- Comments under roughly 1 per 200 likes on high like counts: possible engagement pod.
+- Instagram only: comments under roughly 1 per 200 likes on high like counts, a possible
+  engagement pod. Do not apply this to TikTok, where comment ratios run naturally lower.
 - More than half of the recent posts marked as paid partnerships: audience fatigue.
 - Outside the band, the language or the geography the builder asked for.
 
@@ -133,6 +140,9 @@ never hunt for a personal one.
 
 **Fit note.** One line per creator: what they already post that overlaps the product, and which
 recent post shows the format to brief.
+
+If fewer than 15 creators survive, run one widening pass (a new gate) with two or three adjacent
+audience terms before delivering a short list, and say in the report that the niche is thin.
 
 Rank the keepers by median engagement. Reference bands for 10K to 100K accounts, for orientation
 only: TikTok healthy above 4%, strong above 8%; Instagram healthy above 3%, strong above 6%;

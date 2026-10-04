@@ -53,8 +53,10 @@ Then six rules:
    credit and Replit's trust. Stop and explain when the motion does not apply.
 3. **Capability is discovered, never assumed.** Resolve Actor IDs and input schemas at runtime
    before building an input. Never invent an Actor name, an output field, a price, or a result.
-4. **Gate every spend.** Restate the estimated cost and expected row count, then wait for an
-   explicit yes. One gate per paid step, not one gate for the whole run.
+4. **Gate every spend, once per step.** Each workflow step that launches Actors gets one
+   approval through Replit's `AskQuestion` tool, listing every run in that step with its item and
+   dollar caps and the step total. Not one gate per Actor call (a teardown would show a founder
+   sixty prompts) and not one gate for the whole run.
 5. **End on a reviewed artifact.** A CSV, a comparison table, a shortlist. Never a sent message,
    a live campaign, or a published page. Apollo ships an *inactive* sequence and so do we.
 6. **Keep `SKILL.md` under 500 lines.** Push Actor tables, field maps and cost detail into
@@ -62,9 +64,13 @@ Then six rules:
 
 ## 4. Runtime and auth
 
+Every skill ships the same `references/replit-runtime.md`, which is the operational source of
+truth. In short:
+
 ```
-1. Replit Apify integration, if the workspace has one connected
-2. APIFY_TOKEN from Replit Secrets
+1. Replit's Apify integration, found via the built-in `integrations` skill and called through
+   `query-integration-data` (proxyFetch inside a "use impure" block)
+2. APIFY_TOKEN from Replit Secrets via `environment-secrets`, never read or printed
 3. Stop and tell the builder how to connect one
 ```
 
@@ -89,6 +95,10 @@ On 2026-09-07 Jakub could not tell Replit runs apart from any other traffic: the
 > (`meta.origin` or equivalent), or do we need a different mechanism?
 
 ## 5. Cost
+
+Run options `maxItems` and `maxTotalChargeUsd` go on every run; the latter bounds spend for every
+pricing model, and several Actors ignore `maxItems` or default their own limits to 1,000+.
+
 
 Every Actor these skills route to is pay-per-event, and the key is shared. So:
 

@@ -115,14 +115,20 @@ on the free tier, mostly start fees. Check the live prices before quoting a numb
 
 Collection notes that matter:
 - **Pricing:** crawl the official pricing URL with `apify/website-content-crawler` in
-  `playwright:adaptive` mode, since pricing grids often render client side. A third-party price
-  is secondary evidence, labelled as such, never a substitute for an official one.
+  `playwright:adaptive` mode, since pricing grids often render client side. Some pricing pages
+  are geo-gated and return only a country selector: try the locale URL (`/en-us/pricing`) or set
+  the proxy country to the builder's market. Run crawls one after another. A third-party price is
+  secondary evidence, labelled as such, never a substitute for an official one.
 - **Reviews and complaints:** pull the newest reviews and a separate low-star slice. The low-star
-  slice is where the wedge lives; the newest slice keeps it honest.
+  slice is where the wedge lives; the newest slice keeps it honest. Keep the low-star slice recent
+  with a date floor (the last 18 months): sorted by rating alone, most of it is years old. Theme
+  complaints from the review text itself; provider "theme" fields are often empty.
 - **Complaints in the wild:** pilot first (10 to 20 rows). Brand names collide ("Notion", "Linear"),
   so add the category word to queries and drop rows about a different product.
-- **Ads:** collect only from the verified advertiser identity from step 4. Currently active ads
-  show what they are paying to say now.
+- **Ads:** collect only from the verified advertiser identity from step 4: the Facebook page
+  linked from their site for Meta, and their **domain** (never the brand name) for Google, then
+  check the returned advertiser name matches. A name search returned a different company in
+  testing. Currently active ads show what they are paying to say now.
 - **Hiring:** count open roles by department and team. Ten new sales roles and no engineering roles
   is a strategy statement.
 

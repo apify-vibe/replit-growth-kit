@@ -109,4 +109,4 @@ Drop platforms before you ask for the gate rather than after.
 | Consumer, under 35 | TikTok adjacency via YouTube, X, Reddit |
 | Local services and trades | Search, Facebook groups via search, Reddit |
 | Creator economy | X, YouTube, Instagram adjacency |
-| Regulated or enterprise internal | Usually none. Say so and stop. |
+| Regulated or enterprise internal | Run the step 3 probe; it usually stops the scan here. |

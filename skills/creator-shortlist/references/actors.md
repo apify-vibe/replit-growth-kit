@@ -18,14 +18,17 @@ server in the 90 days to early October 2026.
 | `videoSearchDateFilter` | Live enum (`PAST_MONTH`, `LAST_3_MONTHS`, ...), never a number string like `"60"` |
 | `shouldDownloadVideos`, `commentsPerPost` | Leave off; they add cost and nothing to the ranking |
 
-### Instagram: `apify/instagram-scraper` (26K MCP users)
+### Instagram: `apify/instagram-search-scraper` with popular reels
 
 ```json
-{"directUrls":["https://www.instagram.com/explore/tags/studygram/"],"resultsType":"posts","resultsLimit":30,"onlyPostsNewerThan":"<ISO date, 60 days ago>"}
+{"search":"study routine","searchType":"popular","searchLimit":20}
 ```
 
-Use **hashtag page URLs** in `directUrls`. The `search` + `searchType: "hashtag"` mode returned
-hashtag metadata rather than posts in testing. Compute the date at run time.
+Returns reels with `ownerUsername`, `likesCount`, `commentsCount`, `paidPartnership`. Tested
+2026-10-04 (run `4cID4qXWUhyU7rXAN`, $0.01): 6 of 12 authors inside 10K to 200K followers.
+Fallback: `apify/instagram-hashtag-scraper` with `{"hashtags":["study routine"],"keywordSearch":true,"resultsType":"reels","resultsLimit":20}`
+(5 of 15 in band, $0.024). Avoid hashtag page URLs in `apify/instagram-scraper` for discovery:
+they return the recent tab, mostly brands and tiny accounts.
 
 ### YouTube: `streamers/youtube-scraper` (8.4K MCP users)
 
@@ -56,15 +59,16 @@ and `latestPosts[]` (12 posts) with `likesCount`, `commentsCount`, `timestamp`, 
 `commentCount`, `shareCount`, `playCount`, `createTimeISO`, `isPinned`; author meta carries
 `fans` (followers) and the bio.
 
-### YouTube: `streamers/youtube-channel-scraper` (2.9K users)
+### YouTube: `streamers/youtube-scraper` with channel URLs
 
 ```json
-{"startUrls":[{"url":"https://www.youtube.com/@channel"}],"maxResults":12}
+{"startUrls":[{"url":"https://www.youtube.com/@channel/videos"}],"maxResults":12,"sortVideosBy":"NEWEST"}
 ```
 
-Per-video `viewCount`, `likes`, `commentsCount`, `date`; channel stats such as
-`numberOfSubscribers` repeat on every row. The business email sits on the channel's about page,
-often behind a sign-in; record "not visible" rather than guessing.
+Per-video `viewCount`, `likes`, `commentsCount`, `date`, plus channel fields. Do not use
+`streamers/youtube-channel-scraper` for step 5: it returns no likes or comment counts and only
+relative dates. YouTube has no pinned flag. The business email sits on the channel's about page,
+often behind a sign-in; the creator's linked website is the more reliable hop.
 
 ## Engagement maths
 
@@ -74,8 +78,8 @@ Instagram (likesCount + commentsCount) / followersCount
 YouTube   (likes + comments) / viewCount
 ```
 
-Exclude pinned posts. Median over up to 12 most recent remaining posts. Report median, min, max
-and posts used.
+Exclude pinned posts (TikTok, Instagram). Median over up to 12 most recent remaining posts. Report
+median, min, max and posts used.
 
 | Platform | Healthy | Strong |
 |---|---|---|

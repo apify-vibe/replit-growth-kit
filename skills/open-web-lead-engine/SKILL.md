@@ -74,7 +74,7 @@ Then pick one lane:
 
 | Lane | Use when | Actor |
 |---|---|---|
-| **A. Local businesses** | The ICP is a business type in a place: restaurants, clinics, gyms, salons, contractors, hotels | `compass/crawler-google-places` with its contact and lead add-ons |
+| **A. Businesses in a place** | The ICP is a business type in a city: restaurants, clinics, gyms, salons, contractors, hotels, and also agencies, studios and other service firms with Maps listings | `compass/crawler-google-places` with its contact and lead add-ons |
 | **B. You have company websites** | The builder has a domain list, a signup export or a directory | `vdrmota/contact-info-scraper` |
 | **C. Companies you must find first** | A category with no map presence: agencies, SaaS, marketplaces | `apify/google-search-scraper`, then lane B on the results |
 
@@ -84,14 +84,21 @@ emails; say so up front.
 
 ### 4. Pilot (gated)
 
-Run a pilot of 10 to 20 companies in one gate. Before it returns, write down what counts as
-relevant. Count relevant rows against those criteria: below 50%, stop, show the pilot and suggest
-one change to the query or location (a new gate). Directories, job boards and marketplaces are
-not companies; they never count as relevant.
+Run a pilot of 10 to 20 companies in one gate, using the pilot bar and one-rewrite rule from the
+runtime reference. Before it returns, write down what counts as relevant. Directories, job boards
+and marketplaces are not companies; they never count as relevant.
+
+For lane C, keep listicles out of the search before they cost a pilot: put the business type in
+`wordsInTitle` (for example `["agency"]`) and exclude directory sites in the query
+(`-jobs -clutch -designrush -upwork -glassdoor`).
 
 ### 5. Scale and enrich (gated)
 
-Show the expected count before running. For lane A it multiplies:
+Show the expected count before running, and set expectations honestly in the gate: for small
+local businesses and agencies, named decision-makers and verified emails come back for a minority
+of companies, so a list of 100 companies often yields 10 to 20 leads plus a longer review list.
+
+For lane A it multiplies:
 `places per search × searches` places, plus `places × maximumLeadsEnrichmentRecords` person
 records, plus each social network enabled, each billed per item. Default caps: 50 places per
 search, 3 people per company, Instagram and Facebook only. Lane C's search and its lane B
@@ -103,24 +110,32 @@ Settings that carry the quality of the list:
   billing.
 - `verifyLeadsEnrichmentEmails: true` whenever enrichment is on. It is the bounce-rate control.
 - `maximumLeadsEnrichmentRecords` above zero; zero switches the enrichment off.
+- `leadsEnrichmentDepartments` mapped from the buyer role, so enrichment returns decision-makers
+  instead of staff: owners and managers → `["c_suite", "operations"]`; marketing buyers →
+  `["marketing", "c_suite"]`; finance → `["finance", "c_suite"]`. Titles are sometimes filed under
+  the wrong department, so step 6 still checks the role.
 
 ### 6. Sort every row: lead, review or excluded
 
 Every sourced row lands in exactly one file, with a reason. Nothing is silently dropped.
 
-1. **Excluded.** Spurious enrichment (the person's `companyWebsite` hostname differs from the
-   company's own), non-companies (directories, job boards, marketplaces), and explicit mismatches
-   on a required criterion (`out_of_icp_geography`, `out_of_icp_size`, ...).
+1. **Excluded.** Spurious enrichment, non-companies (directories, job boards, marketplaces), and
+   explicit mismatches on a required criterion (`out_of_icp_geography`, `out_of_icp_size`,
+   `out_of_icp_role`, ...). Enrichment is spurious when the person's `companyWebsite` hostname
+   differs from the company's own, **or** their email sits on a different company's domain
+   (personal Gmail-style addresses are not spurious on their own), **or** their location is far
+   outside the ICP geography.
 2. **Review.** A required criterion is unknown, or no identifiable person was returned. A company
    name is not a person: a lead needs a first and last name from the row. Contacts that may belong
    to a different company also go here.
 3. **Lead.** Every required criterion supported, a named person, and a business contact.
 
 Score leads only, 0 to 100, from what the row actually contains: verified email 40, a named person
-whose title matches the buyer role 30, phone 10, active social presence 10, the size signal 10.
+whose title matches the buyer role 30, phone 10, social presence 10 (a linked profile with 500+
+followers; activity is not checked), the size signal 10.
 "Verified" means the provider explicitly returned a valid status for that exact email; unknown,
-catch-all, risky or missing statuses score 0 and the raw status stays in the row. A social URL
-alone is not "active". Write the components next to the score and check they add up.
+catch-all, risky or missing statuses score 0 and the raw status stays in the row. Write the
+components next to the score and check they add up.
 
 Deduplicate leads on lowercased email, or on lowercased first name + last name + company domain
 when there is no email. Never on domain alone: two branches of one business stay two rows.

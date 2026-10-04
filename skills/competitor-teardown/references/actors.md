@@ -42,8 +42,10 @@ lead enrichment). Use `site:` queries to resolve identifiers for the other Actor
 ```
 
 `playwright:adaptive` matters: pricing grids are often client-rendered. Raise
-`dynamicContentWaitSecs` (default 10) when a grid comes back empty. Use the item's
-`crawl.loadedTime` as `fetched_at`.
+`dynamicContentWaitSecs` (default 10) when a grid comes back empty. Geo-gated pages (FreshBooks
+returned only a country selector) need the locale URL or `proxyConfiguration.apifyProxyCountry`
+set to the builder's market. Use the item's `crawl.loadedTime` as `fetched_at`. Do not point
+review-site Actors at pricing pages: a Capterra fallback returned nothing and still billed.
 
 ### History: `ryanclinton/wayback-machine-search` (19 users, works but ignores platform `maxItems`)
 
@@ -58,7 +60,7 @@ two or three `archiveUrl`s to diff old and new pricing.
 
 | Source | Actor | Users | Price | Minimal input | Notes |
 |---|---|---|---|---|---|
-| G2 | `automation-lab/g2-scraper` | 194 | $0.01 start + $0.00575/review | `{"mode":"product_reviews","productUrls":["https://www.g2.com/products/notion/reviews"],"maxReviews":30,"sortReviews":"newest"}` | `mode` is required. `hateTheme`, `switchedReason`, `switchedFromOtherProduct` are the teardown gold. `minRating` filters. |
+| G2 | `automation-lab/g2-scraper` | 194 | $0.01 start + $0.00575/review | `{"mode":"product_reviews","productUrls":["https://www.g2.com/products/notion/reviews"],"maxReviews":30,"sortReviews":"newest"}` | `mode` is required. **No star filter:** `minRating` filters the NPS score (0 to 10). For the complaint slice use `sortReviews: "rating_low"` plus `publishedAfter`. Read `reviewText`; `hateTheme` came back empty in testing. `switchedReason` and `switchedFromOtherProduct` are worth keeping. |
 | Capterra | `zen-studio/capterra-reviews-scraper` | 129 | $0.005 start + $0.002/review | `{"productUrl":"https://www.capterra.com/p/186596/Notion/reviews/","maxResults":30}` | URL must include the numeric ID. `starRating` filters to 1-2 stars. Returns `switchingReasons`, `alternativeProducts`. |
 | TrustRadius | `zen-studio/trustradius-review-scraper` | 28 | $0.004/review | `{"productUrl":"https://www.trustradius.com/products/notion/reviews","maxResults":30}` | Lower volume; newest test review was a year old. |
 | Gartner Peer Insights | `zen-studio/gartner-review-scraper` | 16 | $0.002/review | `{"productUrls":["https://www.gartner.com/reviews/market/<market>/vendor/<vendor>/product/<product>"],"maxResults":30}` | Enterprise products only. `maxResults: 0` means unlimited; always set it. |
@@ -91,7 +93,7 @@ Also surfaces "Show HN: open-source X alternative" launches, which are new compe
 | Library | Actor | Users | Price | Minimal input | Notes |
 |---|---|---|---|---|---|
 | Meta (Facebook, Instagram) | `apify/facebook-ads-scraper` | 5.4K MCP | per ad | `{"startUrls":[{"url":"https://www.facebook.com/<page>"}],"resultsLimit":20,"activeStatus":"active","isDetailsPerAd":true}` | Page URL from the competitor's own site. `curious_coder/facebook-ads-library-scraper` searches by keyword for category-wide scans. |
-| Google Ads Transparency | `solidcode/ads-transparency-scraper` | 540 | $0.001 start + $0.0015/ad | `{"searchQuery":"canva.com","maxResults":20}` | Domain or advertiser name. Returns format, first and last shown, `approxDaysShown`, preview links; no ad copy text. |
+| Google Ads Transparency | `solidcode/ads-transparency-scraper` | 540 | $0.001 start + $0.0015/ad | `{"searchQuery":"canva.com","maxResults":20}` | **Query by domain, never brand name** (a name search returned a different company), then check `advertiserName`. Returns format, first and last shown, `approxDaysShown`, preview links; no ad copy text. |
 | LinkedIn Ad Library | `memo23/linkedin-ads-scraper` | 153 | $0.0015/ad | `{"companies":["Notion"],"maxItems":20,"scrapeAdDetails":false}` | Returns ad `body` copy. `scrapeAdDetails` adds impressions and targeting at one extra request per ad. |
 | TikTok (EU/UK only) | `data_xplorer/tiktok-ads-library-fast` | 74 | $0.025 start + $0.0015/ad | `{"region":"FR","query":"Canva","queryType":"1","maxAds":20,"startDate":"2026-01-01"}` | `region` must be EU/EEA/UK. A US-only advertiser returns nothing. Largest fixed fee in this list. |
 
