@@ -44,11 +44,10 @@ Actor is unavailable, as the runtime reference describes.
 | Lane B, contacts from websites | `vdrmota/contact-info-scraper` |
 | Lane C, find companies first | `apify/google-search-scraper`, then lane B |
 
-On **every** Apify request, including requests made through `proxyFetch`, send
-`User-Agent: apify-replit-growth-kit/open-web-lead-engine`, and on every run start also send
-`Content-Type: application/json` with the input as a JSON string. `proxyFetch` sets neither:
-without the content type Apify rejects the run (HTTP 400, "Actor input must have content type
-application/json"), and without the user agent the run is invisible to Replit usage counts.
+Call Apify through the workspace's Apify connection, following that connection's own
+instructions for requests. If it lets you set headers, send
+`User-Agent: apify-replit-growth-kit/open-web-lead-engine` so runs from Replit can be counted. If run starts
+fail while reads work, follow "When run starts fail" in the runtime reference.
 
 ## Workflow
 

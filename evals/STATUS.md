@@ -115,6 +115,26 @@ Apify rejects the run with HTTP 400 `invalid-input: Actor input must have conten
 Fixed in commit `587b91b`: every SKILL.md and the runtime reference now state both required
 headers and the canonical run-start shape. Zip and Replit bundle rebuilt.
 
+## Post-run finding (2026-10-04 afternoon): Replit's native Apify connector fails on run starts
+
+In Lukas's test Repls, Agent reaches Apify through Replit's native connector (`connectorFetch`),
+not the `proxyFetch` interface the overnight runs used. A diagnostic matrix there showed every GET
+returns 200, and every run start returns `500 internal-server-error`, including
+`apify~hello-world` with `{}`, on both `/acts/` and `/actors/` paths. Account `apify-marketing`
+(BRONZE), the same account whose run starts worked overnight via `proxyFetch`.
+
+Fingerprint, reproduced directly against the Apify API: Apify returns exactly this 500 only when
+a POST carries a `Content-Encoding` header (`gzip`, `br`, `deflate`) whose body is not actually
+encoded. Every other malformed POST gets a 4xx with a clear message; a really gzipped body works.
+So the connector most likely adds a `Content-Encoding` header to POST bodies it does not compress.
+This is a Replit connector bug to report to Replit; it is not fixable in the skills.
+
+Skill changes (commit after `04e993c`): connection guidance is now connector-agnostic (follow the
+connection's own docs, User-Agent only where headers are allowed), plus a documented fallback: if
+reads work but run starts 500, the builder adds `APIFY_TOKEN` as a Replit Secret and Agent calls
+the API with a plain HTTP client. Attribution is lost on `connectorFetch` because it accepts no
+headers: worth raising with Replit (the connector could send its own identifying User-Agent).
+
 ## Spend
 
 | Phase | Apify spend |

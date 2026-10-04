@@ -6,41 +6,32 @@ spend, and the evidence rules every Growth Kit skill shares. Where an example in
 
 ## 1. Connect to Apify
 
-1. Read Replit's `integrations` skill and check the `## Integrations` view for a live Apify
-   connection. Record its id, type and status. A provider name in a menu is not a connection;
-   follow the `integrations` skill's lifecycle if it is not yet added.
-2. Make every Apify call through Replit's `query-integration-data` skill (RESOLVE, then EXECUTE):
-   fetch the connection inside a `"use impure"` function and call the API in that same block with
-   the connection's client or `proxyFetch`. Take the connector slug from the Integrations view,
-   never from a display name.
-3. Fallback only: if no connection exists, use the `environment-secrets` skill to check for an
-   `APIFY_TOKEN` secret or to request one securely. Never read, print, log, persist or ask for the
-   token value in chat. Send it only as `Authorization: Bearer <token>`, never in a URL.
-4. If neither exists, stop and tell the builder how to connect Apify. Do not guess.
+Use the workspace's Apify connection (Replit's `integrations` skill shows it) and call Apify
+through whatever interface that connection documents, following its own rules for paths, bodies
+and headers. Those interfaces change between Replit versions (`proxyFetch`, `connectorFetch`,
+client libraries), so this skill does not prescribe them. Never read, print or ask for a token.
 
-Every Apify request carries these headers; `proxyFetch` adds neither on its own:
+Apify facts that hold for any interface:
 
-| Header | When | Why |
-|---|---|---|
-| `Content-Type: application/json` | every POST with a body (starting a run) | Without it Apify rejects the run with HTTP 400 `invalid-input: Actor input must have content type "application/json"`. Send the body as `JSON.stringify(input)`. |
-| `User-Agent: apify-replit-growth-kit/<skill-name>` | every request | It is how Apify counts runs that come from Replit. |
+- Start a run with `POST /v2/acts/<owner>~<name>/runs`, run options in the query
+  (`maxItems`, `maxTotalChargeUsd`), and the Actor input as a JSON **object**.
+- Start with one `GET /v2/users/me`. It proves the connection works and gives the account tier
+  for pricing (section 2).
+- If the interface lets you set headers, send `User-Agent: apify-replit-growth-kit/<skill-name>`
+  on every request so Apify can count runs that come from Replit. If it doesn't, skip it.
 
-The shape of a run start, whatever client you use:
+**When run starts fail.** If GET requests work but every run start returns HTTP 500
+`internal-server-error`, even `apify~hello-world` with `{}` as input, the connection is failing on
+writes; the skill's request is not the problem. Stop, say so plainly, and offer the fallback: the
+builder adds their Apify API token as a Replit Secret named `APIFY_TOKEN` (Apify Console →
+Settings → Integrations). Then call the API with an ordinary HTTP client and these headers:
+`Authorization: Bearer <token>` (from the secret, never printed), `Content-Type:
+application/json`, `User-Agent: apify-replit-growth-kit/<skill-name>`.
 
-```
-POST https://api.apify.com/v2/acts/<owner>~<name>/runs?maxItems=<n>&maxTotalChargeUsd=<usd>
-Content-Type: application/json
-User-Agent: apify-replit-growth-kit/<skill-name>
-body: JSON.stringify(<Actor input>)
-```
-
-Before the first paid step, make one cheap `GET /v2/users/me` through the connection. It proves
-the connection works and gives you the account tier for pricing (section 2). A `400 invalid-input`
-on a run start is a request problem, not a server outage: fix the request, never retry it
-unchanged.
-
-A bare `401` or `403` is not proof of a missing token. Inspect the live integration status and
-follow the `integrations` recovery steps before re-authorising or switching to a secret.
+Other responses: `400 "Actor input must have content type application/json"` means the request
+went out without a JSON content type; a bare `401` or `403` is not proof of a missing token, so
+inspect the connection status with the `integrations` skill before re-authorising. If there is
+neither a connection nor a secret, stop and tell the builder how to connect Apify.
 
 ## 2. Resolve each Actor live
 
