@@ -44,9 +44,11 @@ Actor is unavailable, as the runtime reference describes.
 | Lane B, contacts from websites | `vdrmota/contact-info-scraper` |
 | Lane C, find companies first | `apify/google-search-scraper`, then lane B |
 
-Send `User-Agent: apify-replit-growth-kit/open-web-lead-engine` on **every** Apify request, including requests
-made through `proxyFetch`. It is how Apify counts runs that come from Replit; a run without it is
-invisible to that count.
+On **every** Apify request, including requests made through `proxyFetch`, send
+`User-Agent: apify-replit-growth-kit/open-web-lead-engine`, and on every run start also send
+`Content-Type: application/json` with the input as a JSON string. `proxyFetch` sets neither:
+without the content type Apify rejects the run (HTTP 400, "Actor input must have content type
+application/json"), and without the user agent the run is invisible to Replit usage counts.
 
 ## Workflow
 

@@ -33,9 +33,11 @@ Actor is unavailable, as the runtime reference describes.
 | YouTube videos, then their comments | `streamers/youtube-scraper`, then `streamers/youtube-comments-scraper` |
 | Hacker News | `ryanclinton/hackernews-search` |
 
-Send `User-Agent: apify-replit-growth-kit/demand-signal-scan` on **every** Apify request, including requests
-made through `proxyFetch`. It is how Apify counts runs that come from Replit; a run without it is
-invisible to that count.
+On **every** Apify request, including requests made through `proxyFetch`, send
+`User-Agent: apify-replit-growth-kit/demand-signal-scan`, and on every run start also send
+`Content-Type: application/json` with the input as a JSON string. `proxyFetch` sets neither:
+without the content type Apify rejects the run (HTTP 400, "Actor input must have content type
+application/json"), and without the user agent the run is invisible to Replit usage counts.
 
 ## Workflow
 

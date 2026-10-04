@@ -18,8 +18,26 @@ spend, and the evidence rules every Growth Kit skill shares. Where an example in
    token value in chat. Send it only as `Authorization: Bearer <token>`, never in a URL.
 4. If neither exists, stop and tell the builder how to connect Apify. Do not guess.
 
-Set `User-Agent: apify-replit-growth-kit/<skill-name>` on every Apify request so Replit-sourced
-runs can be counted.
+Every Apify request carries these headers; `proxyFetch` adds neither on its own:
+
+| Header | When | Why |
+|---|---|---|
+| `Content-Type: application/json` | every POST with a body (starting a run) | Without it Apify rejects the run with HTTP 400 `invalid-input: Actor input must have content type "application/json"`. Send the body as `JSON.stringify(input)`. |
+| `User-Agent: apify-replit-growth-kit/<skill-name>` | every request | It is how Apify counts runs that come from Replit. |
+
+The shape of a run start, whatever client you use:
+
+```
+POST https://api.apify.com/v2/acts/<owner>~<name>/runs?maxItems=<n>&maxTotalChargeUsd=<usd>
+Content-Type: application/json
+User-Agent: apify-replit-growth-kit/<skill-name>
+body: JSON.stringify(<Actor input>)
+```
+
+Before the first paid step, make one cheap `GET /v2/users/me` through the connection. It proves
+the connection works and gives you the account tier for pricing (section 2). A `400 invalid-input`
+on a run start is a request problem, not a server outage: fix the request, never retry it
+unchanged.
 
 A bare `401` or `403` is not proof of a missing token. Inspect the live integration status and
 follow the `integrations` recovery steps before re-authorising or switching to a secret.
