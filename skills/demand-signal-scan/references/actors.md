@@ -25,6 +25,25 @@ finding the right subreddit is half the output.
 | `includeNSFW` | boolean | Defaults `true`. Set `false` for most B2B scans. |
 | `proxy` | object | Defaults to residential, which is what Reddit needs |
 
+### Reddit fallback: `fatihtahta/reddit-scraper-search-fast` (2.5K users, 99% success)
+
+Use when `trudax/reddit-scraper-lite` returns 0 items on a SUCCEEDED run, which happened on both
+its subreddit-search URL and `searchCommunityName` forms in testing (2026-10-04) while this Actor
+returned results.
+
+```json
+{"subredditName":"freelance","subredditKeywords":["unpaid invoice"],"subredditTimeframe":"year","scrapeComments":true,"maxComments":10}
+```
+
+| Field | Use |
+|---|---|
+| `queries` | Site-wide search terms |
+| `subredditName` + `subredditKeywords` | Search inside one subreddit |
+| `timeframe` / `subredditTimeframe` | `all`, `year`, `month`, `week`, `day`, `hour` |
+| `scrapeComments` | `true` for complaint threads |
+| `maxComments` | **Defaults to 50,000.** Always set it (10 per post). |
+| `dateFrom` / `dateTo` | Hard date window |
+
 ## X: `apidojo/tweet-scraper`
 
 | Field | Type | Use |
@@ -57,6 +76,31 @@ your product category.
 | `startUrls` | array | Specific videos or channels |
 | `transcriptionAndSubtitle` | enum | `NONE` by default. Transcription costs materially more; leave it off for a scan. |
 
+## YouTube comments: `streamers/youtube-comments-scraper`
+
+The dedicated comments Actor (about 2.4K MCP users in 90 days, 99% success). Feed it the video
+URLs found with `streamers/youtube-scraper`.
+
+| Field | Type | Use |
+|---|---|---|
+| `startUrls` | array | Required. `[{"url": "https://www.youtube.com/watch?v=..."}]`, the top 5 to 10 workaround videos |
+| `maxComments` | integer | **Defaults to 1.** Set it (50 per video). |
+| `sortCommentsBy` | enum | `TOP_COMMENTS` for phrasing, `NEWEST_FIRST` for warm threads |
+| `oldestCommentDate` | string | Recency floor |
+
+## Hacker News: `ryanclinton/hackernews-search`
+
+For developer and technical audiences. Tested 2026-10-04 (100% success, $0.005 per story).
+
+```json
+{"query":"spreadsheet invoicing","maxResults":30,"searchType":"date"}
+```
+
+## Interest over time (optional): `apify/google-trends-scraper`
+
+Answers "is this growing?" when the builder asks. `searchTerms` array, `timeRange` enum (for
+example `today 12-m`), `geo` country code. Not part of the default scan.
+
 ## Search: `apify/google-search-scraper`
 
 Catches the forums that are neither Reddit nor X: trade boards, Quora, Stack Exchange, Facebook
@@ -84,4 +128,4 @@ Drop platforms before you ask for the gate rather than after.
 | Consumer, under 35 | TikTok adjacency via YouTube, X, Reddit |
 | Local services and trades | Search, Facebook groups via search, Reddit |
 | Creator economy | X, YouTube, Instagram adjacency |
-| Regulated or enterprise internal | Usually none. Say so and stop. |
+| Regulated or enterprise internal | Run the step 3 probe; it usually stops the scan here. |

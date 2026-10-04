@@ -1,2 +1,4 @@
 .ref/
 .DS_Store
+.replit-mirror/
+evals/runs/*/*/

@@ -15,19 +15,11 @@ the admin's API key. Two consequences.
 
 ## Authentication
 
-Resolve in this order:
-
-1. The Replit Apify integration, when the workspace has one connected.
-2. `APIFY_TOKEN` from Replit Secrets.
-3. Stop. Tell the builder to connect the integration or add the secret from
-   [Apify Console, Settings, Integrations](https://console.apify.com/settings/integrations).
-
-**Send the token as `Authorization: Bearer <token>`.** Never put it in a URL. A `?token=` parameter
-is written into every access log, proxy log, traceback and shell history the request passes through,
-and the Apify API accepts the header everywhere.
-
-Never print the token, never echo it into a log line, and never write it into a file in the
-workspace. Replit projects get forked and shared.
+Connecting to Apify from Replit (integration first, `APIFY_TOKEN` secret as fallback) is covered
+in [replit-runtime.md](replit-runtime.md). The token travels only as an
+`Authorization: Bearer <token>` header, never in a URL: a `?token=` parameter is written into every
+access log, proxy log, traceback and shell history it passes through. Never print it, log it or
+write it into a workspace file; Replit projects get forked and shared.
 
 ## Cost
 

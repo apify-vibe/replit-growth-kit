@@ -1,0 +1,280 @@
+[
+  {
+    "id": "lead-good-maps",
+    "skill": "open-web-lead-engine",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 2,
+    "runs_listed": 2,
+    "cost_usd": 1.1567,
+    "ungated_runs": [],
+    "ua_attributed": "2/2",
+    "runs": [
+      {
+        "run": "AQYcaSS4afKYjCtE0",
+        "status": "SUCCEEDED",
+        "usd": 0.0892,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "hqyyvoJlBnhxxWEfD",
+        "status": "SUCCEEDED",
+        "usd": 1.0675,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      }
+    ],
+    "main_rows": 3,
+    "G6_rows_ok": false,
+    "G5_prov": {
+      "url_col": "source_url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "3/3"
+  },
+  {
+    "id": "demand-good-reddit",
+    "skill": "demand-signal-scan",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [
+      "demand-signals.md"
+    ],
+    "runs_verified": 0,
+    "runs_listed": 0,
+    "cost_usd": 0.0,
+    "ungated_runs": [],
+    "ua_attributed": "0/0",
+    "runs": [],
+    "main_rows": 26,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
+  },
+  {
+    "id": "demand-good-youtube",
+    "skill": "demand-signal-scan",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 9,
+    "runs_listed": 9,
+    "cost_usd": 1.5526,
+    "ungated_runs": [],
+    "ua_attributed": "9/9",
+    "runs": [
+      {
+        "run": "R6LKFWg3xgDl0IYih",
+        "status": "SUCCEEDED",
+        "usd": 0.0042,
+        "ua": "apify-replit-growth-kit/demand-signal-scan"
+      },
+      {
+        "run": "TTl7bOAJGHfY5Koe7",
+        "status": "SUCCEEDED",
+        "usd": 0.125,
+        "ua": "apify-replit-growth-kit/demand-signal-scan"
+      },
+      {
+        "run": "ydca5YTuNNKClMZ57",
+        "status": "SUCCEEDED",
+        "usd": 0.01,
+        "ua": "apify-replit-growth-kit/demand-signal-scan"
+      },
+      {
+        "run": "1hEJEa7Y5yai8r7wB",
+        "status": "SUCCEEDED",
+        "usd": 0.015,
+        "ua": "apify-replit-growth-kit/demand-signal-scan"
+      },
+      {
+        "run": "8jdjm3EjkkMq8lLof",
+        "status": "SUCCEEDED",
+        "usd": 0.0066,
+        "ua": "apify-replit-growth-kit/demand-signal-scan"
+      },
+      {
+        "run": "cs0x1YjWvloQoUAq8",
+        "status": "SUCCEEDED",
+        "usd": 0.89,
+        "ua": "apify-replit-growth-kit/demand-signal-scan"
+      },
+      {
+        "run": "KnfWlKIS1mBlJU69U",
+        "status": "SUCCEEDED",
+        "usd": 0.4038,
+        "ua": "apify-replit-growth-kit/demand-signal-scan"
+      },
+      {
+        "run": "IW0MCTxN0EkjxuhL3",
+        "status": "SUCCEEDED",
+        "usd": 0.02,
+        "ua": "apify-replit-growth-kit/demand-signal-scan"
+      },
+      {
+        "run": "exVcmnWnO29yLGsvI",
+        "status": "SUCCEEDED",
+        "usd": 0.078,
+        "ua": "apify-replit-growth-kit/demand-signal-scan"
+      }
+    ],
+    "main_rows": 31,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
+  },
+  {
+    "id": "creator-good-tiktok",
+    "skill": "creator-shortlist",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 11,
+    "runs_listed": 11,
+    "cost_usd": 0.3524,
+    "ungated_runs": [],
+    "ua_attributed": "11/11",
+    "runs": [
+      {
+        "run": "kgyM39e304cTejd9y",
+        "status": "SUCCEEDED",
+        "usd": 0.0017,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "iH3nwZhKsIrzeHWyL",
+        "status": "SUCCEEDED",
+        "usd": 0.0075,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "G5kdb9daJPZZuRiuf",
+        "status": "SUCCEEDED",
+        "usd": 0.0017,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "b5f8gSQSHWxohPi9N",
+        "status": "SUCCEEDED",
+        "usd": 0.001,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "5KdFkuICMYD8mceU0",
+        "status": "SUCCEEDED",
+        "usd": 0.0144,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "ywLZZd0CTFdapGjjt",
+        "status": "SUCCEEDED",
+        "usd": 0.0586,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "Xw0I15dXX69nuOh7h",
+        "status": "SUCCEEDED",
+        "usd": 0.015,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "DLSrJEuV4RNwgjStF",
+        "status": "SUCCEEDED",
+        "usd": 0.015,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "uyorr0YejKiIEp8zm",
+        "status": "SUCCEEDED",
+        "usd": 0.015,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "fcMjSTam07EhIh9wj",
+        "status": "SUCCEEDED",
+        "usd": 0.2025,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "xcZfVjDpvVJeYHYjN",
+        "status": "SUCCEEDED",
+        "usd": 0.02,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      }
+    ],
+    "main_rows": 30,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "profile_url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
+  },
+  {
+    "id": "creator-good-youtube",
+    "skill": "creator-shortlist",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 5,
+    "runs_listed": 5,
+    "cost_usd": 0.54,
+    "ungated_runs": [],
+    "ua_attributed": "5/5",
+    "runs": [
+      {
+        "run": "FzC7X9BMkRV6dIhda",
+        "status": "SUCCEEDED",
+        "usd": 0.016,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "lVoZdh6Bq86zWnn3b",
+        "status": "SUCCEEDED",
+        "usd": 0.09,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "1SrruJaSn0jNOEXn2",
+        "status": "SUCCEEDED",
+        "usd": 0.24,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "llsGmGomGKKTmpgta",
+        "status": "SUCCEEDED",
+        "usd": 0.09,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      },
+      {
+        "run": "DwzOqVxunaaSwfmPo",
+        "status": "SUCCEEDED",
+        "usd": 0.104,
+        "ua": "apify-replit-growth-kit/creator-shortlist"
+      }
+    ],
+    "main_rows": 19,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "profile_url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
+  }
+]
