@@ -25,6 +25,25 @@ finding the right subreddit is half the output.
 | `includeNSFW` | boolean | Defaults `true`. Set `false` for most B2B scans. |
 | `proxy` | object | Defaults to residential, which is what Reddit needs |
 
+### Reddit fallback: `fatihtahta/reddit-scraper-search-fast` (2.5K users, 99% success)
+
+Use when `trudax/reddit-scraper-lite` returns 0 items on a SUCCEEDED run, which happened on both
+its subreddit-search URL and `searchCommunityName` forms in testing (2026-10-04) while this Actor
+returned results.
+
+```json
+{"subredditName":"freelance","subredditKeywords":["unpaid invoice"],"subredditTimeframe":"year","scrapeComments":true,"maxComments":10}
+```
+
+| Field | Use |
+|---|---|
+| `queries` | Site-wide search terms |
+| `subredditName` + `subredditKeywords` | Search inside one subreddit |
+| `timeframe` / `subredditTimeframe` | `all`, `year`, `month`, `week`, `day`, `hour` |
+| `scrapeComments` | `true` for complaint threads |
+| `maxComments` | **Defaults to 50,000.** Always set it (10 per post). |
+| `dateFrom` / `dateTo` | Hard date window |
+
 ## X: `apidojo/tweet-scraper`
 
 | Field | Type | Use |

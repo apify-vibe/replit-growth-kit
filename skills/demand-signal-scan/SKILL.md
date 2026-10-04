@@ -93,6 +93,9 @@ to 10 videos, 50 comments each; Hacker News 30 stories; search 2 pages per phras
   (`https://www.reddit.com/r/<sub>/search/?q=<phrase>&restrict_sr=1&t=year`); that reached 62%
   relevant in testing. Run one subreddit per run, one run at a time: the Actor's item cap is shared
   across all start URLs and comments count toward it, so the first subreddit can use it all up.
+  If a Reddit run reports SUCCEEDED with 0 items, that is a blocked scrape, not an empty
+  community: pilot the fallback Actor `fatihtahta/reddit-scraper-search-fast` in a new gate (see
+  `actors.md`). Short keywords (`unpaid invoice`) return results where long phrases return none.
 - **X:** one pass sorted `Latest` for warm threads, one sorted `Top` for phrasing. Set
   `minimumFavorites: 2` from the start and add `-giveaway -promo -discount` style exclusions;
   unfiltered X searches come back mostly as vendor promotion.
