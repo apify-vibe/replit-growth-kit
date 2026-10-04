@@ -36,7 +36,7 @@ themselves grew to 265 to 350 lines each of defensive, eval-driven rules.
 | demand-bad-private | pass | $0.004 | one probe, then stopped |
 | teardown-good-smb | pass | $0.93 | 4 competitors, 33 runs, 274 review rows; wedge: flat per-location pricing vs seat billing |
 | teardown-good-prosumer | pass | $1.56 | 4 competitors, 46 runs, 727 review rows; wedge: reminders gated behind paid tiers |
-| teardown-edge-hidden-pricing | running | | |
+| teardown-edge-hidden-pricing | pass* | $0.96 | hidden pricing detected (3 of 4 publish none), still delivered 403 reviews + 72 signals; *subject hand-wrote gate timestamps, so gate order is not machine-verifiable |
 | creator-good-tiktok | pass | $0.37 | 15 creators, 14 with published email; Instagram discovery weak, fixed |
 | creator-good-youtube | pass | $0.43 | 8 creators; named Actor lacked likes/comments, fixed |
 | creator-bad-enterprise | pass | $0 | stopped at fit check, 0 runs |
@@ -49,9 +49,27 @@ columns complete.
 
 Round 1 fixes (27 items) are in `evals/runs/2026-10-04-r1/FIXES.md`, applied in commit `bf7ce95`.
 
-## Round 2
+## Round 2 and 3 (regression runs after fixes)
 
-_pending_
+| Case | Round | Result | Cost | Notes |
+|---|---|---|---|---|
+| demand-good-reddit | r2 | pass | $0.95 | 25 quotes; r/Freelancers top; documented a Reddit fallback Actor after zero-item runs |
+| demand-good-youtube | r2 | pass | $1.55 | both pilots passed the new thread-level bar; 27 quotes |
+| creator-good-tiktok | r2 | pass | $0.35 | 30 creators (22 TikTok, 8 Instagram; Instagram was 1 in r1), 26 with email |
+| creator-good-youtube | r2 | pass | $0.54 | 19 creators (8 in r1) |
+| lead-good-maps | r2 | **below bar** | $1.16 | 3 leads; department filter backfired (reverted) |
+| lead-good-maps | r3 | **below bar** | $0.95 | 5 leads; chain filter removed 32/101 places, staff filter 21 people |
+
+### Verdict per skill
+
+| Skill | Verdict | Why |
+|---|---|---|
+| competitor-teardown | **ship** | 3/3 cases; 7 angles live; wedges were real and specific |
+| demand-signal-scan | **ship** | 3/3 cases; r2 confirms the Reddit and YouTube fixes |
+| creator-shortlist | **ship** | 3/3 cases; r2 doubled yield on both platforms |
+| open-web-lead-engine | **ship with a stated yield, your call** | passed 3/3 in round 1 (10 and 15 leads), but after the correctness fixes the independent-restaurant case lands at 5 leads per 100 places (bar: 10). The fixes removed chains and staff that round 1 counted, so the lower number is the honest one. The skill now states this yield up front. v2 fix in the backlog: owner-name discovery from business websites. |
+
+Total live Apify spend across all rounds: about $13.
 
 ## Replit acceptance
 
