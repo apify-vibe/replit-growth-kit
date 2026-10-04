@@ -1,6 +1,6 @@
 ---
 name: demand-signal-scan
-description: Use when a Replit builder does not yet know who wants the app they are building or where those people are. Inspect the app, derive the problem it solves, build a search vocabulary from that, then scan Reddit, X, YouTube comments and search results for people describing that problem in their own words. Returns ranked communities to launch in, the verbatim phrasing prospects actually use, which becomes the copy for every other growth motion, and a shortlist of recent public threads worth replying to. Runs behind a cost gate and ends at a written report. Never posts, replies or messages anyone.
+description: Use when a Replit builder does not yet know who wants the app they are building, where those people talk, or how they describe the problem. Inspect the app, name the problem and the workaround people use today, then scan Reddit, X, YouTube comments, Hacker News and search results for people describing it in their own words. Returns verbatim quotes with links (the copy for every other growth motion), ranked communities to launch in, and recent public threads worth a helpful reply. Probes before spending, pilots each platform, gates spend per step, and ends at a written report. Never posts, replies or messages anyone.
 metadata:
   motion: growth
   vendor: apify
@@ -11,178 +11,133 @@ metadata:
 This skill is designed to run inside a Replit workspace with Replit Agent. It reads your app's
 codebase and project context directly. Import it into Replit rather than running it elsewhere.
 
-Find out whether anyone has the problem this app solves, where they talk about it, and what words
-they use. Everything else in the Growth Kit works better once you know that. Your ICP gets sharper,
-your cold email subject lines stop being guesses, and your landing page can quote a real person.
+Find out whether people have the problem this app solves, where they talk about it, and what words
+they use. Everything else in a growth plan gets better once you know that: the ICP gets sharper,
+cold email subject lines stop being guesses, and the landing page can quote a real person.
+
+**Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
+Apify, the one-gate-per-step rule, pilots and evidence rules. Actor inputs and traps are in
+[references/actors.md](references/actors.md).
 
 ## Workflow
 
 ```
 - [ ] 1. Inspect the app and name the problem
 - [ ] 2. Build the search vocabulary
-- [ ] 3. Judge whether the problem is discussed in public
-- [ ] 4. Estimate cost and gate
-- [ ] 5. Scan the platforms
-- [ ] 6. Extract phrasing, rank communities, pick warm threads
+- [ ] 3. Probe: is this discussed in public? (gated, cheap)
+- [ ] 4. Pilot each platform (gated)
+- [ ] 5. Collect the platforms that passed (gated)
+- [ ] 6. Extract quotes, rank communities, pick threads
 - [ ] 7. Deliver the report
 ```
 
 ### 1. Inspect the app and name the problem
 
-Read the workspace: README, landing copy, routes, models, empty states, seed data. Then write one
-sentence in the shape *"X person cannot Y, so they currently Z."* The Z is the important part.
-People rarely post asking for your product. They post complaining about the workaround.
+Read the workspace: README, landing copy, routes, models, empty states, seed data. Write one
+sentence shaped *"X person cannot Y, so they currently Z."* The Z matters most. People rarely post
+asking for your product; they post complaining about the workaround.
 
-Example, for a tool that schedules shifts for restaurants: *"Restaurant managers cannot see who is
-available next week, so they currently text everyone individually and rebuild a spreadsheet every
-Sunday."* The scan hunts for the texting and the spreadsheet, not for "shift scheduling software."
+For a restaurant scheduling tool: *"Restaurant managers cannot see who is available next week, so
+they text everyone individually and rebuild a spreadsheet every Sunday."* The scan hunts for the
+texting and the spreadsheet, not for "shift scheduling software".
 
 Show the sentence to the builder and let them correct it once.
 
 ### 2. Build the search vocabulary
 
-From that sentence, write 8 to 12 search phrases across three types. Keep them in the language a
-frustrated person would type, with no product category words.
+Write 8 to 12 phrases across three types, in the words a frustrated person would type, without
+product-category words:
 
-- **Workaround phrases.** What they do instead. `"spreadsheet for staff scheduling"`,
-  `"texting everyone their shifts"`.
-- **Complaint phrases.** How the pain sounds. `"sick of rebuilding the rota"`,
-  `"scheduling takes me all Sunday"`.
-- **Shopping phrases.** The small number who are already looking. `"alternative to when i work"`,
-  `"cheapest rota app"`.
+- **Workaround:** what they do instead (`"spreadsheet for staff rota"`, `"texting everyone their shifts"`).
+- **Complaint:** how the pain sounds (`"sick of rebuilding the rota"`).
+- **Shopping:** the few already looking (`"alternative to when i work"`).
 
-Shopping phrases find buyers. Complaint phrases find copy. You want both, weighted toward complaint
-phrases, because those are the ones nobody else is monitoring.
+Weight toward complaint phrases: they find copy, and nobody else is monitoring them. Keep Reddit
+phrases short (two to four words); long phrases return almost nothing.
 
-### 3. Judge whether the problem is discussed in public
+### 3. Probe: is this discussed in public? (gated, cheap)
 
-Run one cheap probe before spending anything: a single `apify/google-search-scraper` call with two
-or three of the complaint phrases, `maxPagesPerQuery: 1`.
+One `apify/google-search-scraper` call with two or three complaint phrases, one page each.
 
-If that returns forum threads, Reddit posts, or Q&A pages, continue. If it returns only vendor
-landing pages and listicles, stop and say so. Some problems are real and simply never discussed in
-public, which is common in regulated B2B and in internal enterprise tooling. Tell the builder that
-the scan will not find anything and point them at the ICP & Market Sizing skill, which works from
-firmographics rather than from conversation.
+Forum threads, Reddit posts or Q&A pages in the results: continue. Only vendor pages and
+listicles: stop and say so. Some real problems are never discussed in public, common in regulated
+B2B and internal enterprise tooling. Write the empty report explaining that, and point the
+builder to a firmographic approach (check whether an ICP & Market Sizing skill is installed).
 
-### 4. Estimate cost and gate
+### 4. Pilot each platform (gated)
 
-Default caps per run, which you raise only on request:
+Pick platforms that fit the audience before asking for the gate:
 
-| Platform | Cap |
+| Audience | Platforms |
 |---|---|
-| Reddit | 100 posts, 10 comments per post |
-| X | 200 tweets |
-| YouTube | 20 videos, comments on the top 5 |
-| Search | 2 pages per query |
+| B2B operations, finance, admin | Reddit, search |
+| Developers and technical buyers | Reddit, Hacker News, X |
+| Consumers under 35 | YouTube comments, Reddit, X |
+| Local services and trades | Search (forums, Facebook groups that rank), Reddit |
+| Creators and freelancers | Reddit, YouTube comments, X |
 
-Show the builder the platform list, the caps, and that these are pay-per-event Actors billed
-against the workspace Apify key. Wait for an explicit yes.
+Pilot each chosen platform with 10 to 20 items in one gate. Before it runs, write what counts as
+relevant: the author describes the problem or the workaround. Below 50% relevant, stop that
+platform and keep the pilot; rewriting the phrases is a new gate. A pilot that misses is a
+collection failure, not proof of no demand.
 
-Drop platforms that do not fit before you ask. A B2B ops problem lives on Reddit and in search, not
-on TikTok. Scanning everywhere is how a cheap scan becomes an expensive one.
+### 5. Collect the platforms that passed (gated)
 
-### 5. Scan the platforms
+Default caps: Reddit 100 posts with 10 comments each; X 200 posts; YouTube comments on the top 5
+to 10 videos, 50 comments each; Hacker News 30 stories; search 2 pages per phrase.
 
-Resolve each Actor and read its live input schema before building an input. Field tables are in
-[references/actors.md](references/actors.md).
+- **Reddit:** search, don't crawl named subreddits; finding the right subreddit is half the output.
+  Turn on community search so the ranking in step 6 has data. Use `time: "year"` to keep threads
+  worth replying to.
+- **X:** one pass sorted `Latest` for warm threads, one sorted `Top` for phrasing (posts that got
+  engagement said it well).
+- **YouTube:** two steps. Find tutorial videos about the **workaround** (`"excel staff rota
+  template"`), then pull their comments with the dedicated comments Actor. Comment sections under
+  workaround tutorials are dense with complaints.
+- **Hacker News:** for technical audiences; `Ask HN` and `Show HN` threads carry both the pain and
+  the competitors.
 
-**Reddit**, `trudax/reddit-scraper-lite`. Search rather than crawl named subreddits, because
-finding the right subreddit is half the output.
+### 6. Extract quotes, rank communities, pick threads
 
-```json
-{
-  "searches": ["sick of rebuilding the rota", "spreadsheet for staff scheduling"],
-  "searchPosts": true,
-  "searchComments": true,
-  "searchCommunities": true,
-  "sort": "relevance",
-  "time": "year",
-  "maxItems": 100,
-  "maxComments": 10,
-  "skipUserPosts": true
-}
-```
+**Verbatim quotes.** Pull 15 to 25 sentences where a real person states the problem. Quote exactly,
+typos included, from text you fetched in full; a search snippet is a lead, not a quote. Keep the
+link and the date of that exact post or comment (a thread's date does not date its replies). Do
+not tidy a quote into marketing language; the moment you do, it stops being evidence. This is the
+most valuable output, so it goes first.
 
-`searchCommunities: true` is what produces the ranked subreddit list in step 6. `time: "year"`
-keeps results recent enough that the threads are still worth replying to.
+**Ranked communities.** Score each subreddit, channel, hashtag or forum you actually observed on
+three things: matching posts, recency, and whether members are the buyer or a bystander. Count each
+post once even if several phrases found it. Give the top 5 with member counts and why each ranked.
 
-**X**, `apidojo/tweet-scraper`.
-
-```json
-{
-  "searchTerms": ["sick of rebuilding the rota", "rota spreadsheet"],
-  "sort": "Latest",
-  "maxItems": 200,
-  "tweetLanguage": "en"
-}
-```
-
-Use `sort: "Latest"` for warm threads and a second pass with `sort: "Top"` for phrasing, since the
-posts that got engagement are the ones that said it well.
-
-**YouTube**, `streamers/youtube-scraper`. Comments under tutorial videos about the workaround are a
-dense source of complaints. Search the workaround, not your category.
-
-```json
-{
-  "searchQueries": ["excel staff rota template"],
-  "maxResults": 20,
-  "sortingOrder": "relevance"
-}
-```
-
-**Search**, `apify/google-search-scraper`, with the complaint phrases and `maxPagesPerQuery: 2`.
-This catches the forums that are neither Reddit nor X: trade boards, Quora, Stack Exchange,
-Facebook group pages that rank.
-
-### 6. Extract phrasing, rank communities, pick warm threads
-
-**Verbatim phrasing.** Pull 15 to 25 sentences where a real person states the problem. Quote them
-exactly, including the typos and the swearing. Keep the source URL on each one. This is the most
-valuable output in the whole scan, so put it first in the report. Do not paraphrase into marketing
-language. The moment you tidy a quote it stops being evidence.
-
-**Ranked communities.** Score each subreddit, hashtag, channel or forum on three things: how many
-matching posts it produced, how recent they are, and whether the members are the buyer or a
-bystander. A subreddit full of the buyer complaining beats a larger one where your problem is
-mentioned once. Give the top 5 with member counts and the reason each one ranked.
-
-**Warm threads.** List 10 to 20 public posts from the last 90 days where someone describes the
-problem and nobody sold them anything yet. Include the URL, the date, a one-line summary, and what
-a useful reply would say.
-
-Set the expectation plainly when you hand these over. These are public posts, so a useful public
-reply is welcome in most communities and a cold DM is not. The skill produces threads to
-participate in, not a list to message.
+**Warm threads.** 10 to 20 public posts from the last 90 days where someone describes the problem
+and nobody has sold them anything yet: URL, date, one-line summary, and what a useful reply would
+say. Tell the builder plainly: a helpful public reply is welcome in most communities; a cold DM to
+these people is not. This skill produces threads to take part in, not a list to message.
 
 ### 7. Deliver the report
 
-Write `demand-signals.md` and `signals.csv` into the workspace.
+Write to the workspace root, even if the probe or a pilot stopped the scan:
 
-`demand-signals.md`, in this order: the problem sentence, the verbatim quotes with links, the
-ranked communities, the warm threads, and a short section on what the language suggests for
-positioning. Put the quotes above everything else.
+- `demand-signals.md`: the problem sentence, the quotes with links, the ranked communities, the
+  warm threads, what the language suggests for positioning, and what was skipped or failed and why.
+  Quotes above everything else.
+- `signals.csv`: `platform`, `url`, `posted_at`, `community`, `quote`, `signal_type` (complaint,
+  workaround, shopping), `engagement`, `source_actor`, `source_run_id`.
 
-`signals.csv` columns: `platform`, `url`, `posted_at`, `author_handle`, `community`, `quote`,
-`signal_type` (complaint, workaround, shopping), `engagement`, `source_run_id`.
-
-Close with the count of quotes found, the top community, a link to the runs in Apify Console, and
-one handoff: the verbatim phrasing feeds the Cold Email Launch, Viral Screens, and Pricing & Paywall
-Audit skills. Offer to rerun on a schedule if the builder wants to watch the language shift.
+Close with the number of quotes, the top community, a link to the runs in Apify Console, and the
+next step: the verbatim phrasing feeds cold email, landing copy and positioning. Before naming
+another skill, check that it is installed. Offer a monthly rerun to watch the language shift.
 
 ## Troubleshooting
 
-- **Plenty of results, none of them the buyer.** The vocabulary drifted into category words. Rewrite
-  the phrases as complaints and rerun. This is the most common failure.
-- **Reddit returns almost nothing.** `time: "year"` may be too narrow for a slow-moving niche. Widen
-  to `"all"` and accept that the warm-thread list will be shorter.
-- **X returns mostly bots and promotions.** Add `minimumFavorites: 2` or set `onlyVerifiedUsers` and
-  rerun. Engagement filters cut promotional noise faster than keyword filters.
-- **Quotes are all from vendors and consultants.** You found the supply side. Add `-site:` exclusions
-  for the vendor domains in the search lane and rerun the social lanes with tighter phrases.
-- **`401` or `403` from the API.** The workspace Apify integration is not connected, or
-  `APIFY_TOKEN` is missing from Replit Secrets.
+- **Lots of results, none from the buyer.** The vocabulary drifted into category words. Rewrite the
+  phrases as complaints. The most common failure.
+- **Reddit returns almost nothing.** Phrases are too long, or `time: "year"` is too narrow for a
+  slow niche. Shorten them, or widen to `"all"` and accept a shorter warm-thread list.
+- **X returns bots and promotions.** Add `minimumFavorites: 2`. Engagement filters cut promotional
+  noise faster than keywords.
+- **Quotes are all from vendors and consultants.** You found the supply side. Exclude vendor domains
+  in search and tighten the social phrases.
+- **`401` or `403`.** Follow the runtime reference; do not assume a missing token.
 
-Cost guardrails and error recovery shared across these skills:
-[references/gotchas.md](references/gotchas.md).
+Cost guardrails and recovery shared across these skills: [references/gotchas.md](references/gotchas.md).

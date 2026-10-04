@@ -57,6 +57,31 @@ your product category.
 | `startUrls` | array | Specific videos or channels |
 | `transcriptionAndSubtitle` | enum | `NONE` by default. Transcription costs materially more; leave it off for a scan. |
 
+## YouTube comments: `streamers/youtube-comments-scraper`
+
+The dedicated comments Actor (about 2.4K MCP users in 90 days, 99% success). Feed it the video
+URLs found with `streamers/youtube-scraper`.
+
+| Field | Type | Use |
+|---|---|---|
+| `startUrls` | array | Required. `[{"url": "https://www.youtube.com/watch?v=..."}]`, the top 5 to 10 workaround videos |
+| `maxComments` | integer | **Defaults to 1.** Set it (50 per video). |
+| `sortCommentsBy` | enum | `TOP_COMMENTS` for phrasing, `NEWEST_FIRST` for warm threads |
+| `oldestCommentDate` | string | Recency floor |
+
+## Hacker News: `ryanclinton/hackernews-search`
+
+For developer and technical audiences. Tested 2026-10-04 (100% success, $0.005 per story).
+
+```json
+{"query":"spreadsheet invoicing","maxResults":30,"searchType":"date"}
+```
+
+## Interest over time (optional): `apify/google-trends-scraper`
+
+Answers "is this growing?" when the builder asks. `searchTerms` array, `timeRange` enum (for
+example `today 12-m`), `geo` country code. Not part of the default scan.
+
 ## Search: `apify/google-search-scraper`
 
 Catches the forums that are neither Reddit nor X: trade boards, Quora, Stack Exchange, Facebook

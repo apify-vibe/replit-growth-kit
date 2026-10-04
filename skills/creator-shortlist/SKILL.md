@@ -1,6 +1,6 @@
 ---
 name: creator-shortlist
-description: Use when a Replit builder is ready to run UGC or influencer marketing for the app they are building and does not know which creators to hire. Inspect the app, derive the niche and the audience, then find TikTok, Instagram and YouTube creators in that niche, rank them by real engagement rate on recent posts rather than by follower count, and collect the business contact emails those creators published themselves. Returns a vetted shortlist of 15 to 30 micro creators with engagement maths, recent post examples and a fit note each, ready to brief. Runs behind a cost gate and ends at a shortlist. Never contacts anyone; pairs with the UGC Launch Kit skill, which writes the brief and hires on SideShift.
+description: Use when a Replit builder is ready to run UGC or influencer marketing for the app they are building and does not know which creators to hire. Inspect the app, judge UGC fit, derive the niche as an audience, then discover TikTok, Instagram and YouTube creators from recent content in that niche, rank them by median engagement on their latest posts rather than follower count, flag dormant, sponsored-heavy and suspicious accounts, and collect the business emails creators published themselves. Pilots before scaling, gates spend per step, and ends at a shortlist of 15 to 30 micro creators with the maths shown. Never contacts anyone.
 metadata:
   motion: growth
   vendor: apify
@@ -11,14 +11,17 @@ metadata:
 This skill is designed to run inside a Replit workspace with Replit Agent. It reads your app's
 codebase and project context directly. Import it into Replit rather than running it elsewhere.
 
-Produce a shortlist of creators worth paying, ranked on evidence. The UGC Launch Kit skill writes
-the brief and hires on SideShift. Viral Screens builds the visuals they will film. This skill fills
-the gap those two assume is already filled, which is knowing who to hire.
+Produce a shortlist of creators worth paying, ranked on evidence. Briefing and hiring workflows
+assume the builder already knows who to hire; this skill fills that gap.
 
-The ranking rule: **follower count is close to worthless and engagement rate on recent posts is the
-signal.** Followers are cheap to buy, decay silently, and say nothing about whether an audience
-acts. A creator with 20,000 followers at 8% engagement will move more installs than one with 400,000
-at 0.4%, and will charge a fraction as much.
+The ranking rule: **engagement on recent posts beats follower count.** Followers are cheap to buy,
+decay silently, and say little about whether an audience acts. A creator with 20,000 followers at
+8% engagement usually does more for an app than one with 400,000 at 0.4%, for a fraction of the
+fee. These are comparison signals, not guarantees of installs.
+
+**Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
+Apify, the one-gate-per-step rule, pilots and evidence rules. Actor inputs and traps are in
+[references/actors.md](references/actors.md).
 
 ## Workflow
 
@@ -26,182 +29,145 @@ at 0.4%, and will charge a fraction as much.
 - [ ] 1. Inspect the app and derive the niche
 - [ ] 2. Judge UGC fit, stop if it fails
 - [ ] 3. Pick platforms and the follower band
-- [ ] 4. Estimate cost and gate
-- [ ] 5. Discover creators
-- [ ] 6. Compute engagement and collect contacts
+- [ ] 4. Discover creators from content (pilot, then scale; gated)
+- [ ] 5. Pull recent posts for survivors (gated)
+- [ ] 6. Compute engagement, flag, rank, collect contacts
 - [ ] 7. Deliver the shortlist
 ```
 
 ### 1. Inspect the app and derive the niche
 
-Read the workspace: README, landing copy, screenshots, routes, onboarding text, seed data. Write
-down what the product does, who uses it, and the moment in the product that would look good on
-video. That last one matters. UGC sells a visible before-and-after, so a product whose value is a
-saved afternoon needs a different hook from one whose value is a chart appearing.
+Read the workspace: README, landing copy, screenshots, onboarding text, app store description.
+Write what the product does, who uses it, and the moment in the product that would look good on
+video. UGC sells a visible before-and-after, so a product that saves an afternoon needs a different
+hook from one that makes a chart appear.
 
-Derive the niche as an audience rather than a category. "Freelance photographers who invoice badly"
-is searchable on TikTok. "Invoicing SaaS" is not.
-
-Show it to the builder and let them correct it once.
+Write the niche as an audience, not a category: "freelance designers who hate invoicing" is
+searchable on TikTok, "invoicing SaaS" is not. Show it to the builder and let them correct it once.
 
 ### 2. Judge UGC fit
 
 Score four questions before spending anything:
 
 - Can someone demonstrate the product on camera in under 30 seconds?
-- Is the buyer an individual, or someone who can adopt it without a procurement process?
-- Does a creator community exist around the audience, rather than around the tooling?
-- Is signup free or cheap enough that a viewer can act immediately?
+- Can one person adopt it without a procurement process?
+- Is there a creator community around the audience (not around the tooling)?
+- Can a viewer try it immediately, free or cheap?
 
-Three or four yes answers: continue. Two or fewer: stop and say why. A product bought by a committee
-after a security review does not convert from a Reel, and telling the builder that costs nothing
-while a shortlist they cannot use costs real money. Point them at the Cold Email Launch and Open Web
-Lead Engine skills instead.
+Three or four yes: continue. Two or fewer: stop and say why. A product bought by a committee after
+a security review does not convert from a Reel; telling the builder that costs nothing, while a
+shortlist they cannot use costs real money. Write the empty deliverables with the reason, and point
+to outbound instead (check whether the Open Web Lead Engine or Cold Email Launch skill is
+installed).
 
 ### 3. Pick platforms and the follower band
 
-Pick one or two platforms, never all three on a first run.
+One or two platforms on a first run, never all three.
 
 | Platform | Choose when |
 |---|---|
 | TikTok | Consumer, under 35, strong visual demo, low price point |
 | Instagram | Lifestyle, design, fitness, food, local services, creator economy |
-| YouTube | Considered purchase, tutorial-shaped value, developer or prosumer tools |
+| YouTube | Considered purchase, tutorial-shaped value, prosumer and developer tools |
 
-Target the **10,000 to 100,000 follower band**. Below 10,000 the reach is too thin to learn anything
-from a single post. Above 100,000 the rate card leaves a pre-revenue founder with one shot and no
-iteration. The band is where engagement is highest and where a first budget buys several attempts.
+Default band: **10,000 to 100,000 followers.** Below that, one post teaches too little; above it,
+the rate card leaves a pre-revenue founder one shot and no iteration. Use the builder's band if
+they give one.
 
-### 4. Estimate cost and gate
+### 4. Discover creators from content (pilot, then scale; gated)
 
-Default caps per platform:
+Search **content**, not profiles: recent posts in the audience's own language surface the creators
+actually making that content. Profile search returns brands and dormant accounts.
 
-| Step | Cap |
-|---|---|
-| Discovery | 3 search terms or hashtags, 30 profiles each |
-| Recent posts per creator | 12, for the engagement maths |
-| Profiles carried into contact collection | 40 |
+- **TikTok:** video search in the audience's language, recent window.
+- **Instagram:** hashtag **page URLs** (`https://www.instagram.com/explore/tags/<tag>/`) in the
+  general scraper. Do not use its `search` + `searchType: "hashtag"` mode: in testing it returned
+  hashtag metadata, not posts.
+- **YouTube:** video search for the audience's topics, sorted by relevance, within the last year.
 
-Show the builder the platforms, the niche terms, the caps, and that these are pay-per-event Actors
-billed against the workspace Apify key. Wait for an explicit yes.
+Pilot each platform with 10 to 20 posts in one gate. Relevant means the post is about the niche
+and the author is a person, not a brand, an app or a supplier. Below 50% relevant, stop that
+platform and rewrite the terms (new gate). Then scale to about 3 terms × 30 posts per platform in
+one gate. Collect the authors, drop brands and off-niche accounts, and keep up to 40 for step 5.
 
-### 5. Discover creators
+### 5. Pull recent posts for survivors (gated)
 
-Resolve each Actor and read its live input schema before building an input. Field tables are in
-[references/actors.md](references/actors.md).
+Only now pay per profile, and only for the survivors:
 
-**TikTok**, `clockworks/tiktok-scraper`. Search by the audience's own language, then pull each
-profile's recent posts.
+- **Instagram:** `apify/instagram-profile-scraper` with the usernames. One call per profile
+  returns followers, bio, external links and the latest 12 posts with likes, comments, pin and
+  paid-partnership flags.
+- **TikTok:** `clockworks/tiktok-scraper` with the handles, 12 latest videos each,
+  `excludePinnedPosts: true`, author metadata on.
+- **YouTube:** `streamers/youtube-channel-scraper` with the channel URLs, 12 latest videos each.
 
-```json
-{
-  "searchQueries": ["freelance photographer tips", "photographer business"],
-  "searchSection": "/user",
-  "maxProfilesPerQuery": 30,
-  "resultsPerPage": 12,
-  "profileScrapeSections": ["videos"],
-  "profileSorting": "latest",
-  "excludePinnedPosts": true,
-  "scrapeAdditionalAuthorMeta": true
-}
-```
+### 6. Compute engagement, flag, rank, collect contacts
 
-`scrapeAdditionalAuthorMeta: true` returns the follower and total-like counts you need for the
-denominator. `excludePinnedPosts: true` matters more than it looks: pinned posts are a creator's
-best-ever result and including them inflates every engagement rate on the list.
-
-**Instagram**, `apify/instagram-scraper`. Two passes. Discover by hashtag, then pull the profiles.
-
-```json
-{
-  "search": "freelancephotographer",
-  "searchType": "hashtag",
-  "searchLimit": 30,
-  "resultsType": "posts",
-  "resultsLimit": 12,
-  "onlyPostsNewerThan": "90 days"
-}
-```
-
-Collect the author handles from that, then rerun with `resultsType: "details"` and
-`directUrls` set to the profile URLs, which returns follower counts and the bio.
-
-**YouTube**, `streamers/youtube-scraper`.
-
-```json
-{
-  "searchQueries": ["photography business tips"],
-  "maxResults": 30,
-  "sortingOrder": "relevance",
-  "dateFilter": "year"
-}
-```
-
-### 6. Compute engagement and collect contacts
-
-**Engagement rate.** Compute it yourself from the posts. Never take a number a profile reports.
+**Engagement.** Compute it yourself from raw counts on each post; never take a rate a profile or
+tool reports.
 
 ```
-TikTok    per post: (diggCount + commentCount + shareCount) / playCount
-Instagram per post: (likesCount + commentsCount) / followersCount
+TikTok    per video: (diggCount + commentCount + shareCount) / playCount
+Instagram per post:  (likesCount + commentsCount) / followersCount
 YouTube   per video: (likes + comments) / viewCount
 ```
 
-Use the **median** across the creator's last 12 non-pinned posts, not the mean. One viral post drags
-a mean upward and hides a creator whose normal output lands flat. Report the median and the spread,
-because a creator who is consistent is easier to brief than one who occasionally spikes.
+Leave out pinned posts: they are a creator's best-ever results and inflate every rate. Use the
+**median** of up to the 12 most recent remaining posts, not the mean, so one viral hit does not
+hide a creator whose normal post lands flat. Report the median, the min to max range, and the
+number of posts used. A post missing its denominator is skipped, not estimated; if fewer than 6
+posts are usable, mark the rate as low-confidence.
 
-Rough reference bands in the 10,000 to 100,000 range: TikTok is healthy above 4% and strong above
-8%; Instagram is healthy above 3% and strong above 6%; YouTube is healthy above 2%. Treat these as
-orientation rather than as a cutoff, since they vary by niche.
+**Flags.** Each of these sends a creator to the rejected list with the reason. They are warning
+signs, not proof:
 
-**Drop these before ranking.** Each of these is a creator who will take the money and deliver
-nothing.
+- Fewer than 3 posts in the last 60 days: dormant.
+- Under 1% engagement with over 50,000 followers: audience not engaging, possibly bought.
+- Comments under roughly 1 per 200 likes on high like counts: possible engagement pod.
+- More than half of the recent posts marked as paid partnerships: audience fatigue.
+- Outside the band, the language or the geography the builder asked for.
 
-- Fewer than 3 posts in the last 60 days. The account is dormant.
-- Engagement rate under 1% with over 50,000 followers. Bought audience.
-- Comment-to-like ratio under roughly 1:200 with high like counts. Engagement pods.
-- Feed is more than half sponsored. The audience has stopped believing them.
+**Contacts.** Take only a business email the creator published: in the bio, the channel's about
+page, or one hop to their link-in-bio page. Stop there. Never guess an address from a name, and
+never hunt for a personal one.
 
-**Contacts.** Take only the business email a creator published themselves in their bio or channel
-about page, which is what it is there for. When the bio carries a link-in-bio page instead, follow
-that one hop and read the contact address. Stop there. Do not hunt for a personal address anywhere
-else, and never guess one from a name.
+**Fit note.** One line per creator: what they already post that overlaps the product, and which
+recent post shows the format to brief.
 
-**Fit note.** Write one line per creator on why they fit this specific app: what they already post
-about that overlaps the product, and which of their recent posts shows the format to brief.
+Rank the keepers by median engagement. Reference bands for 10K to 100K accounts, for orientation
+only: TikTok healthy above 4%, strong above 8%; Instagram healthy above 3%, strong above 6%;
+YouTube healthy above 2%.
 
 ### 7. Deliver the shortlist
 
-Write `creator-shortlist.csv` and `creator-shortlist.md` into the workspace.
+Write to the workspace root, even after a failed fit check or a stopped pilot (CSV keeps its
+header, the report explains why it is short):
 
-`creator-shortlist.csv` columns: `platform`, `handle`, `profile_url`, `followers`,
-`engagement_rate_median`, `engagement_spread`, `posts_last_60d`, `sponsored_ratio`,
-`contact_email`, `contact_source`, `top_post_url`, `fit_note`, `source_run_id`.
+- `creator-shortlist.csv`: `platform`, `handle`, `profile_url`, `followers`,
+  `engagement_rate_median`, `engagement_min`, `engagement_max`, `posts_used`, `posts_last_60d`,
+  `sponsored_share`, `contact_email`, `contact_source`, `top_post_url`, `fit_note`, `status`
+  (`shortlisted` or `rejected`), `reject_reason`, `source_actor`, `source_run_id`.
+- `creator-shortlist.md`: the 15 to 30 keepers ranked by engagement and grouped by platform, with
+  the per-post numbers for each so a human can check the maths; then the rejected creators with
+  their reasons, so the builder knows why an account they recognise is missing.
 
-`creator-shortlist.md`: the 15 to 30 keepers ranked by engagement rate, grouped by platform, with
-the maths shown. Add a rejected section with the reason each drop was dropped, because the builder
-will otherwise wonder why an account they recognise is missing.
-
-Close with the count kept and dropped, the engagement range on the list, how many had a published
-email, a link to the runs in Apify Console, and the handoff to the UGC Launch Kit skill, which turns
-this into a brief and hires on SideShift. This skill does not contact anyone.
+Close with counts kept and rejected, the engagement range on the list, how many published an email,
+a link to the runs in Apify Console, and the next step. If a UGC Launch Kit skill is installed,
+offer the shortlist to it for the brief and hiring; otherwise explain how to reach out. This skill
+does not contact anyone.
 
 ## Troubleshooting
 
-- **Discovery returns brands, not creators.** The search terms were category words. Rewrite them as
-  what the audience talks about and rerun.
-- **Every engagement rate looks implausibly high.** Pinned posts leaked in. Confirm
-  `excludePinnedPosts: true` and that you are taking the median.
-- **TikTok play counts missing.** Some regions and some private-ish accounts withhold them. Fall
-  back to `(diggs + comments + shares) / followers` for those rows and mark the method in the CSV,
-  since the two numbers are not comparable.
-- **Almost no published emails.** Normal below 20,000 followers, where creators take DMs instead.
-  Deliver the shortlist anyway and note that the UGC Launch Kit can reach them through SideShift.
-- **Instagram hashtag search returns little.** The hashtag is too niche. Widen one level and filter
-  by bio keyword afterwards.
-- **`401` or `403` from the API.** The workspace Apify integration is not connected, or
-  `APIFY_TOKEN` is missing from Replit Secrets.
+- **Discovery returns brands, not creators.** The terms were category words. Rewrite them as what
+  the audience talks about.
+- **Instagram returns hashtag info, not posts.** You used `search` + `searchType`. Switch to hashtag
+  page URLs.
+- **Every engagement rate looks too high.** Pinned posts leaked in, or you took the mean.
+- **TikTok play counts missing.** Some regions and accounts withhold them. Compute
+  `(diggs + comments + shares) / followers` for those rows, label the method in the CSV, and rank
+  them separately: the two numbers are not comparable.
+- **Hardly any published emails.** Normal below 20,000 followers, where creators take DMs. Deliver
+  the list anyway and say so.
+- **`401` or `403`.** Follow the runtime reference; do not assume a missing token.
 
-Cost guardrails and error recovery shared across these skills:
-[references/gotchas.md](references/gotchas.md).
+Cost guardrails and recovery shared across these skills: [references/gotchas.md](references/gotchas.md).

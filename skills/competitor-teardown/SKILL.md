@@ -1,6 +1,6 @@
 ---
 name: competitor-teardown
-description: Use when a Replit builder needs to price or position the app they are building and has no data on what the market already charges. Inspect the app, find the real competitors from search rather than from guesses, then pull their live pricing pages, packaging and plan limits, the ads they are currently running, and what their customers publicly complain about. Returns a pricing and packaging comparison table, the complaint themes that are the builder's wedge, and the ad angles the category is already using. Runs behind a cost gate and ends at a written teardown. Feeds the Pricing & Paywall Audit and Pricing skills, which benchmark against category norms and need a source for those norms.
+description: Use when a Replit builder wants to understand the competitors of the app they are building, to price it, position it or find a wedge. Inspect the app, find the real competitors from search, then research them from every relevant angle with live data, covering pricing pages, reviews on G2, Capterra, Trustpilot, the app stores and Google Maps, complaints on Reddit, ads on Meta, Google, LinkedIn and TikTok, hiring and Glassdoor reviews, traffic, SEO, funding, tech stack and social presence. Picks the angles that fit the app, gates spend per step, and ends at a written teardown with a pricing table, the complaint themes that are the builder's wedge, and a battlecard per competitor.
 metadata:
   motion: monetization
   vendor: apify
@@ -11,196 +11,179 @@ metadata:
 This skill is designed to run inside a Replit workspace with Replit Agent. It reads your app's
 codebase and project context directly. Import it into Replit rather than running it elsewhere.
 
-Work out what the category charges, how it packages, and where it is weak, from live pages rather
-than from memory. A model's recollection of a pricing page is months stale and frequently invented.
-Everything in this teardown comes from a page fetched today, with the URL attached.
+Work out who the competitors are, what they charge, what their customers hate, how they sell, and
+where they are investing, from data collected today. A model's memory of a competitor is months
+stale and often invented; every claim in this teardown comes from a fetched source with its URL.
+
+**Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
+Apify, the one-gate-per-step rule, pilots and evidence rules. Actor inputs, IDs and gotchas for
+every angle are in [references/actors.md](references/actors.md).
 
 ## Workflow
 
 ```
 - [ ] 1. Inspect the app and name the category
-- [ ] 2. Find the real competitors and confirm the set
-- [ ] 3. Judge whether the category has public pricing
-- [ ] 4. Estimate cost and gate
-- [ ] 5. Pull pricing, ads and complaints
-- [ ] 6. Build the table, the wedge and the angles
+- [ ] 2. Find the real competitors and confirm 3 to 5
+- [ ] 3. Pick the research angles that fit this app
+- [ ] 4. Resolve each competitor's identifiers
+- [ ] 5. Collect, one gate per angle group
+- [ ] 6. Analyse: pricing, wedge, battlecards
 - [ ] 7. Deliver the teardown
 ```
 
 ### 1. Inspect the app and name the category
 
-Read the workspace: README, landing copy, routes, models, any existing pricing page, feature flags.
-Write down the job the product does, the buyer, and the two or three capabilities that would appear
-on a comparison page. Name the category in the words a buyer would search, which is usually plainer
-than the words in the README.
+Read the workspace: README, landing copy, routes, models, pricing page. Write down the job the
+product does, who pays, the price point, and the two or three capabilities that would appear on a
+comparison page. Name the category in the words a buyer would search.
 
-Show it to the builder and let them correct it once. Ask one extra question here: which two or three
-competitors they already think about. Their answer is a seed, not the answer.
+Classify the app, because it decides which angles matter in step 3: **B2B software**, **consumer
+or mobile app**, **local business**, or **developer tool**.
 
-### 2. Find the real competitors and confirm the set
+Show the summary to the builder and let them correct it once. Ask which competitors they already
+know about. Their answer is a seed, not the answer.
 
-Do not work from the builder's list alone. Founders systematically name the well-funded competitor
-and miss the cheap one that is actually taking their customers.
+If the app has no comparable paid alternatives, say so and stop: a teardown of an empty category
+would mislead.
 
-Run `apify/google-search-scraper` on three query shapes:
+### 2. Find the real competitors and confirm 3 to 5
 
-- `best <category> tools` and `<category> software` to find who ranks
-- `<seed competitor> alternatives` for each seed the builder named
-- `<seed competitor> vs` to catch the comparison pages, which name competitors accurately because
-  someone is paying to be on them
+Founders name the well-funded competitor and miss the cheap one taking their customers. Search
+before trusting the seed list. Run one gated `apify/google-search-scraper` step with three query
+shapes:
 
-```json
-{
-  "queries": "best shift scheduling software\nwhen i work alternatives\nwhen i work vs",
-  "maxPagesPerQuery": 2,
-  "languageCode": "en"
-}
-```
+- `best <category> software` and `<category> app` (who ranks)
+- `<seed> alternatives` for each seed (who gets compared)
+- `<seed> vs` for each seed (comparison pages name competitors accurately)
 
-Assemble a candidate list, drop directories, listicles and marketplaces, and keep the vendors.
-Present 8 to 12 to the builder and ask them to cut it to 5. More than five produces a table nobody
-reads and a bill nobody wanted.
+Drop directories, listicles and marketplaces. Show 8 to 12 candidates with one line each and ask
+the builder to keep 3 to 5. More than five makes a table nobody reads and a bill nobody wanted.
 
-### 3. Judge whether the category has public pricing
+### 3. Pick the research angles that fit this app
 
-Check the shortlist for pricing pages before you spend on a crawl. When most competitors hide price
-behind a demo form, say so rather than producing a table of blanks. That finding is itself the
-answer: the category sells through sales, and the builder's pricing question becomes a packaging
-question. Point them at the Pricing skill and continue with ads and complaints only, at a lower cost.
+There are seven angle groups. Recommend a set based on the app type from step 1, show it with a
+cost ceiling, and let the builder add or drop groups before any collection.
 
-### 4. Estimate cost and gate
+| Group | What it answers | B2B software | Consumer / mobile | Local business | Dev tool |
+|---|---|:-:|:-:|:-:|:-:|
+| **A. Pricing and packaging** | What they charge, per what unit, what's gated | ✓ | ✓ | ✓ | ✓ |
+| **B. Customer reviews** | What customers praise and hate, why they switch | G2, Capterra, TrustRadius, Gartner | App Store, Google Play, Trustpilot | Google Maps, Trustpilot | G2, Chrome Web Store |
+| **C. Complaints in the wild** | Unfiltered frustration and switching stories | Reddit, Hacker News | Reddit | Reddit | Reddit, Hacker News |
+| **D. Ads** | What messages they pay to push | Google, LinkedIn, Meta | Meta, TikTok (EU/UK), Google | Meta, Google | Google |
+| **E. Hiring and employees** | Where they're investing; internal morale | Job postings, Glassdoor | Job postings | (skip) | Job postings, Glassdoor |
+| **F. Traction and market** | Traffic, SEO, funding, headcount, launches, tech stack | Similarweb, Ahrefs, Crunchbase, LinkedIn, BuiltWith | Similarweb, Product Hunt | (skip) | Ahrefs, Product Hunt, BuiltWith |
+| **G. Voice and press** | How they talk, what's being said about them | LinkedIn posts, Google News | Instagram, X, YouTube | Instagram | X, YouTube, Hacker News |
 
-Default caps for a 5-competitor teardown:
+The Actor for each source, its minimal input and its traps are in
+[references/actors.md](references/actors.md). Prefer depth over breadth: three angles done well
+beat seven done thinly. TikTok's ad library only covers EU and UK advertisers, so skip it for a
+US-only competitor.
 
-| Step | Cap |
+### 4. Resolve each competitor's identifiers
+
+Most review, ads and company Actors need an ID the builder will not know: a G2 slug, a Capterra
+numeric ID, a Trustpilot domain, an App Store ID or Play package, a Glassdoor `E<id>`, a LinkedIn
+company slug, an ATS board slug, a Facebook page.
+
+Resolve them in one gated step with `apify/google-search-scraper`, using one `site:` query per
+competitor and source (for example `site:g2.com/products notion reviews`, `site:glassdoor.com/Reviews
+calendly`). Take the first URL that matches the competitor's own domain or name.
+
+Take social profiles (Facebook, Instagram, LinkedIn, X, YouTube) from the links on the competitor's
+**own website** when possible, because same-name pages are common. Record each identifier and
+where it came from in an identifier table. An identifier you could not resolve is a skipped source,
+not a guess.
+
+### 5. Collect, one gate per angle group
+
+Run each chosen group as one gated step (see the runtime reference): list every run in the group
+with its Actor, competitor, input in one line, item cap and dollar cap, plus the group total.
+Default caps per competitor:
+
+| Group | Default cap |
 |---|---|
-| Pricing pages | 15 pages per competitor, depth 2 |
-| Ads | 20 ads per competitor |
-| Complaints | 60 Reddit posts, 2 search pages per competitor |
+| A. Pricing | 15 pages from the official pricing URL, depth 2 |
+| B. Reviews | 30 newest reviews per source, plus 20 one-and-two-star reviews where the Actor filters by rating |
+| C. Complaints | 40 Reddit posts with comments; 20 Hacker News stories |
+| D. Ads | 20 active ads per library |
+| E. Hiring | 50 open roles; 20 Glassdoor reviews |
+| F. Traction | 1 record per source per competitor |
+| G. Voice | 10 posts per network; 10 news articles |
 
-Show the builder the competitor list, the three steps, the caps, and that these are pay-per-event
-Actors billed against the workspace Apify key. Let them drop a step. Ads matter for a consumer app
-and rarely for a developer tool, and skipping a step they do not need is the easiest saving here.
+A full sweep of one competitor across the usual angles typically lands well under one US dollar
+on the free tier, mostly start fees. Check the live prices before quoting a number.
 
-### 5. Pull pricing, ads and complaints
+Collection notes that matter:
+- **Pricing:** crawl the official pricing URL with `apify/website-content-crawler` in
+  `playwright:adaptive` mode, since pricing grids often render client side. A third-party price
+  is secondary evidence, labelled as such, never a substitute for an official one.
+- **Reviews and complaints:** pull the newest reviews and a separate low-star slice. The low-star
+  slice is where the wedge lives; the newest slice keeps it honest.
+- **Complaints in the wild:** pilot first (10 to 20 rows). Brand names collide ("Notion", "Linear"),
+  so add the category word to queries and drop rows about a different product.
+- **Ads:** collect only from the verified advertiser identity from step 4. Currently active ads
+  show what they are paying to say now.
+- **Hiring:** count open roles by department and team. Ten new sales roles and no engineering roles
+  is a strategy statement.
 
-Resolve each Actor and read its live input schema before building an input. Field tables are in
-[references/actors.md](references/actors.md).
+### 6. Analyse: pricing, wedge, battlecards
 
-**Pricing and packaging**, `apify/website-content-crawler`. Scope the crawl to the pages that carry
-plan information, otherwise you pay to read a blog.
+**Pricing table.** One row per plan: competitor, plan, monthly and annual price, currency, billing
+unit, the limits that bite, the features that unlock the next tier. Add the builder's own pricing
+as a row. Every field comes from that plan's own source; leave it blank rather than borrowing
+from another plan. Then name three patterns: where the category anchors its entry price, what unit
+everyone bills on, and which feature everyone puts behind the paywall.
 
-```json
-{
-  "startUrls": [{"url": "https://competitor.com/pricing"}],
-  "includeUrlGlobs": [
-    {"glob": "**/pricing**"},
-    {"glob": "**/plans**"},
-    {"glob": "**/compare**"}
-  ],
-  "maxCrawlDepth": 2,
-  "maxCrawlPages": 15,
-  "crawlerType": "playwright:adaptive",
-  "saveMarkdown": true,
-  "removeCookieWarnings": true,
-  "proxyConfiguration": {"useApifyProxy": true}
-}
-```
+When most competitors hide pricing behind a demo form, say so plainly. That is the finding: the
+category sells through sales, and the builder's question becomes packaging, not price.
 
-Keep `crawlerType: "playwright:adaptive"`, because pricing tables are frequently rendered client
-side and a plain HTTP fetch returns an empty grid. From the markdown, extract per plan: name, monthly
-price, annual price, the billing unit (seat, workspace, usage), the limits, and which features the
-plan gates. Record the currency and the date, since both move.
+**The wedge.** Cluster the full-text complaints from reviews, Reddit and Hacker News into themes.
+For each of the top five: how many reviews mention it, across how many competitors, one verbatim
+quote with its link, and whether the builder's app already answers it. A complaint shared across
+several competitors that this app happens to fix is the positioning line.
 
-**Ads**, `apify/facebook-ads-scraper`. This reads the Meta Ad Library, which covers Facebook and
-Instagram and is public.
-
-```json
-{
-  "startUrls": [{"url": "https://www.facebook.com/CompetitorPage"}],
-  "resultsLimit": 20,
-  "activeStatus": "active",
-  "isDetailsPerAd": true
-}
-```
-
-Currently active ads are the signal. A competitor running the same creative for months has found
-something that converts, and the hook in that ad is a tested message you can read for free.
-
-**Complaints**, `trudax/reddit-scraper-lite` plus a search pass. Reddit carries franker criticism
-than review sites, and it does not gate scrapers.
-
-```json
-{
-  "searches": ["competitor alternative", "switching from competitor", "competitor pricing"],
-  "searchPosts": true,
-  "searchComments": true,
-  "sort": "relevance",
-  "time": "year",
-  "maxItems": 60,
-  "maxComments": 10
-}
-```
-
-Add one `apify/google-search-scraper` pass per competitor with `site:` filters against the review
-sites that rank for them, to catch what sits outside Reddit. Read the snippets rather than promising
-a full review-site scrape: G2 and Capterra block crawlers aggressively, and a skill that claims
-otherwise will fail in front of the builder.
-
-### 6. Build the table, the wedge and the angles
-
-**The pricing table.** One row per plan, not per competitor. Columns: competitor, plan, monthly
-price, annual price, billing unit, the two or three limits that bite, and the feature that unlocks
-the next tier up. Add the builder's own current or intended pricing as a row so the comparison is
-readable at a glance. Put the fetch date and the source URL on every row.
-
-Then state the three patterns worth naming: where the category anchors its entry price, what unit
-everyone bills on, and which feature the category consistently puts behind the paywall. That third
-one is the most actionable, because matching it is cheap and deviating from it needs a reason.
-
-**The wedge.** Cluster the complaints into themes and count them. Report the top five with a verbatim
-quote and a link each. Mark which ones the builder's app already answers. A theme that appears across
-several competitors and that this app happens to fix is the positioning line, and it is worth more
-than the pricing table.
-
-**The ad angles.** For each competitor still running ads, summarise the hook, the offer, the format,
-and how long the creative has been live. Group them into the three or four angles the category is
-actually using. Note which angles nobody is running, and be honest that an unused angle is sometimes
-unused because it does not work.
+**Battlecard per competitor.** Half a page each: who they serve, what they charge, what customers
+love, what customers hate, what they are pushing in ads, where they are hiring, traction numbers,
+and one line on how the builder's app should position against them. Every line traces to a row in
+the data files.
 
 ### 7. Deliver the teardown
 
-Write `competitor-teardown.md` and `pricing-comparison.csv` into the workspace.
+Write to the workspace root, even if some angles were skipped or failed:
 
-`competitor-teardown.md` in this order: the wedge, the pricing patterns, the full table, the ad
-angles, and a source appendix with every URL and fetch date. The wedge goes first because it is the
-part that changes what the builder does next.
+- `competitor-teardown.md`, in this order: the wedge, pricing patterns, the battlecards, findings
+  per angle group, what was skipped or failed and why, and a source appendix (identifier table,
+  Actor, run ID and fetch date per source).
+- `pricing-comparison.csv`: `competitor`, `plan_name`, `price_monthly`, `price_annual`,
+  `currency`, `billing_unit`, `key_limits`, `gated_features`, `source_url`, `source_type`
+  (`official`, `third_party`, `own`), `fetched_at`, `source_run_id`.
+- `competitor-reviews.csv`: every review and complaint row in one shape: `competitor`, `source`
+  (g2, capterra, trustpilot, app_store, google_play, google_maps, reddit, hacker_news, glassdoor,
+  ...), `rating`, `published_at`, `title`, `text`, `pros`, `cons`, `theme`, `url`, `actor`,
+  `source_run_id`.
+- `competitor-signals.csv`: everything else as one fact per row: `competitor`, `angle` (ads,
+  hiring, traffic, seo, funding, headcount, tech_stack, launch, social, news), `metric`, `value`,
+  `observed_at`, `url`, `actor`, `source_run_id`.
 
-`pricing-comparison.csv` columns: `competitor`, `plan_name`, `price_monthly`, `price_annual`,
-`currency`, `billing_unit`, `key_limits`, `gated_features`, `source_url`, `fetched_at`,
-`source_run_id`.
-
-Close with the number of competitors covered, how many had public pricing, a link to the runs in
-Apify Console, and the handoff: this table is the input the Pricing & Paywall Audit and Pricing
-skills need when they benchmark against category norms. Offer a rerun in a quarter, since pricing
-pages change quietly and the comparison goes stale without warning.
+Close with: competitors covered, angles covered and skipped, the single strongest wedge in one
+sentence, a link to the runs in Apify Console, and the next step. Before naming a pricing or
+positioning skill as the next step, check that it is installed. Offer a quarterly rerun, since
+pricing pages and ads change quietly.
 
 ## Troubleshooting
 
-- **Pricing page returns an empty table.** The grid renders client side. Confirm
-  `crawlerType: "playwright:adaptive"` and raise `dynamicContentWaitSecs`. If it stays empty the
-  price sits behind a toggle or a calculator, so record the URL and mark the row as needing a human
-  look.
-- **Ad Library returns nothing for a competitor.** They are not running Meta ads, which is a finding
-  rather than an error. Record it. B2B tools often run only Google and LinkedIn.
-- **Wrong Facebook page scraped.** The Actor takes a page URL, and slugs are easy to confuse. Verify
-  each page belongs to the competitor before the run, not after.
-- **Complaints are all about a different product with the same name.** Add a qualifier to the Reddit
-  searches, for example the category word alongside the brand, and rerun.
-- **Crawl burns pages on a blog.** `includeUrlGlobs` was too loose. Tighten it and lower
-  `maxCrawlPages`.
-- **`401` or `403` from the API.** The workspace Apify integration is not connected, or
-  `APIFY_TOKEN` is missing from Replit Secrets.
+- **A review Actor returns nothing.** Usually a wrong identifier. Check the URL from step 4 opens
+  the right product page. A product with no reviews on that site is a finding; record it.
+- **Pricing grid comes back empty.** Raise `dynamicContentWaitSecs` in a new gate. If it stays
+  empty the price sits behind a toggle, a calculator or a demo form: record the URL as "needs a
+  human look".
+- **Ad library returns nothing.** For a successful run on a verified page this means "no active
+  ads observed in this library", not "they don't advertise". B2B tools often run only Google and
+  LinkedIn.
+- **Complaints are about a different product with the same name.** Add the category word to the
+  query and rerun in a new gate.
+- **Run returns far more items than the cap.** Some Actors ignore the platform `maxItems`
+  (see `actors.md`); `maxTotalChargeUsd` still bounds the spend. Set the Actor's own limit field.
+- **`401` or `403`.** Follow the runtime reference; do not assume a missing token.
 
-Cost guardrails and error recovery shared across these skills:
-[references/gotchas.md](references/gotchas.md).
+Cost guardrails and recovery shared across these skills: [references/gotchas.md](references/gotchas.md).

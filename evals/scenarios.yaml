@@ -1,0 +1,94 @@
+# Real-case scenario matrix. Requests are phrased after real MCP usage: the Actors real MCP users
+# call (Snowflake run origins, Jul-Oct 2026) and real apify.com Store search phrases.
+# Source: ~/.claude/context/projects/replit-growth-kit/mcp-usage-scenarios-2026-10.md
+# MCP prompts are not logged anywhere, so requests are constructed on those anchors, not copied.
+
+builder_script:
+  product_summary: "Confirm it as written."
+  spend_gate: "yes, go ahead"
+  any_other_question: "Use your judgment and the defaults in the skill."
+
+cases:
+  - id: lead-good-maps
+    skill: open-web-lead-engine
+    fixture: shiftly
+    fit: good
+    request: "Find independent restaurants in Austin I could pitch Shiftly to. I need the owner or manager name and an email, in a leads table."
+    anchors: "compass/crawler-google-places 24.9K MCP users, 'google maps email', 'lead generation'"
+
+  - id: lead-good-search
+    skill: open-web-lead-engine
+    fixture: briefcraft
+    fit: good
+    request: "I need an apollo scraper alternative: 30 small marketing agencies in London with the founder's name and email."
+    anchors: "'apollo scraper' 1,131, 'email finder', vdrmota/contact-info-scraper"
+
+  - id: lead-bad-consumer
+    skill: open-web-lead-engine
+    fixture: habitloop
+    fit: bad
+    request: "Build me a cold email list to get my first 1,000 users."
+    expect: "Stops before any paid run, explains outbound does not fit a $4.99 consumer app, points to UGC / Consumer & Viral Potential skills."
+
+  - id: demand-good-reddit
+    skill: demand-signal-scan
+    fixture: invoicepilot
+    fit: good
+    request: "Search reddit and X for freelancers complaining about chasing late invoices. Give me the top threads with direct quotes."
+    anchors: "'reddit scraper' 1,200, trudax/reddit-scraper-lite 7.2K MCP users, apidojo/tweet-scraper"
+
+  - id: demand-good-youtube
+    skill: demand-signal-scan
+    fixture: habitloop
+    fit: good
+    request: "Why do people quit habit trackers? Check youtube comments and reddit and group the pain points."
+    anchors: "'youtube comments' 341, streamers/youtube-comments-scraper 2.4K MCP users"
+
+  - id: demand-bad-private
+    skill: demand-signal-scan
+    fixture: pvintake
+    fit: bad
+    request: "Find where my buyers talk about their problems online."
+    expect: "One cheap probe at most, then stops: the problem is not discussed in public. Points to ICP & Market Sizing."
+
+  - id: teardown-good-smb
+    skill: competitor-teardown
+    fixture: shiftly
+    fit: good
+    request: "Do a full competitor teardown for Shiftly: pricing, reviews, what people complain about, their ads, anything useful."
+    anchors: "trustpilot 971, capterra 132, g2 185, 'meta ads' 1,689, 'google ads' 1,318"
+
+  - id: teardown-good-prosumer
+    skill: competitor-teardown
+    fixture: invoicepilot
+    fit: good
+    request: "What do people hate about FreshBooks and Wave? Check reviews everywhere and put competitor pricing side by side."
+    anchors: "trustpilot, 'app store reviews', rag-web-browser"
+
+  - id: teardown-edge-hidden-pricing
+    skill: competitor-teardown
+    fixture: ledgerguard
+    fit: edge
+    request: "How does LedgerGuard stack up against Vanta and Drata?"
+    expect: "Detects demo-gated pricing, skips the pricing crawl or reports it as hidden, still delivers reviews, hiring and ads angles."
+
+  - id: creator-good-tiktok
+    skill: creator-shortlist
+    fixture: habitloop
+    fit: good
+    request: "Find TikTok and Instagram creators posting about study habits and productivity with 10k to 200k followers and good engagement, with emails if they publish one."
+    anchors: "apify/instagram-profile-scraper 21.0K MCP users, clockworks/tiktok-scraper 10.4K, 'instagram email' 937"
+
+  - id: creator-good-youtube
+    skill: creator-shortlist
+    fixture: invoicepilot
+    fit: good
+    request: "YouTube channels about freelancing or running a design business, 5k to 100k subscribers, with a business email."
+    anchors: "'youtube channel' 535, 'youtube email' 433, streamers/youtube-scraper"
+
+  - id: creator-bad-enterprise
+    skill: creator-shortlist
+    fixture: ledgerguard
+    fit: bad
+    request: "Find influencers to promote LedgerGuard."
+    expect: "Stops before any paid run: enterprise procurement purchase, not UGC. Points to outbound skills."

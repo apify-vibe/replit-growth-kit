@@ -1,79 +1,81 @@
 # Actor reference
 
-Verified public and not deprecated on 2026-09-16. All pay-per-event. Resolve the input schema at
-runtime before building an input.
+Checked against live schemas and test output on 2026-10-04. Starting points only: read the live
+schema before each run. "MCP users" is distinct users running the Actor through the Apify MCP
+server in the 90 days to early October 2026.
 
-## TikTok: `clockworks/tiktok-scraper`
+## Step 4: discover from content
 
-| Field | Type | Use |
-|---|---|---|
-| `searchQueries` | array | The audience's own language, not your category |
-| `searchSection` | enum | `""`, `/video`, `/user`. Use `/user` for creator discovery. |
-| `maxProfilesPerQuery` | integer | Default cap 30 |
-| `hashtags` | array | Alternative discovery entry point |
-| `profiles` | array | Direct handles when the builder already has names |
-| `profileScrapeSections` | array | `["videos"]` |
-| `profileSorting` | enum | `latest`, `popular`, `oldest`. Use `latest`; `popular` inflates engagement. |
-| `resultsPerPage` | integer | Posts per creator. 12 is enough for a median. |
-| `excludePinnedPosts` | boolean | `true`. Pinned posts are a creator's best-ever result and inflate every rate. |
-| `scrapeAdditionalAuthorMeta` | boolean | `true`. Returns follower and total-like counts, which you need for the denominator. |
-| `oldestPostDateUnified` | string | Enforces the activity check |
-| `videoSearchDateFilter` | enum | `PAST_MONTH`, `LAST_3_MONTHS` and similar |
-| `commentsPerPost` | integer | Leave at `0`. Comments cost more and add nothing to the ranking. |
-| `shouldDownloadVideos` | boolean | Leave `false`. Downloads are expensive and unnecessary here. |
+### TikTok: `clockworks/tiktok-scraper` (10.8K MCP users)
 
-Per-post fields for the maths: `diggCount`, `commentCount`, `shareCount`, `playCount`. Author meta
-carries `fans` for follower count.
+```json
+{"searchQueries":["study with me","productivity routine"],"searchSection":"/video","maxProfilesPerQuery":30,"videoSearchDateFilter":"PAST_MONTH","shouldDownloadVideos":false,"commentsPerPost":0}
+```
 
-## Instagram: `apify/instagram-scraper`
+| Field | Use |
+|---|---|
+| `searchSection` | `/video` for content-first discovery. `/user` surfaces brands and dormant accounts. |
+| `videoSearchDateFilter` | Live enum (`PAST_MONTH`, `LAST_3_MONTHS`, ...), never a number string like `"60"` |
+| `shouldDownloadVideos`, `commentsPerPost` | Leave off; they add cost and nothing to the ranking |
 
-Two passes. Discover by hashtag, then pull profile details.
+### Instagram: `apify/instagram-scraper` (26K MCP users)
 
-**Pass one, discovery:**
+```json
+{"directUrls":["https://www.instagram.com/explore/tags/studygram/"],"resultsType":"posts","resultsLimit":30,"onlyPostsNewerThan":"<ISO date, 60 days ago>"}
+```
 
-| Field | Type | Use |
-|---|---|---|
-| `search` | string | Hashtag without the `#` |
-| `searchType` | enum | `hashtag`, `profile`, `place`, `user` |
-| `searchLimit` | integer | Default cap 30 |
-| `resultsType` | enum | `posts` |
-| `resultsLimit` | integer | 12 posts per profile |
-| `onlyPostsNewerThan` | string | `"90 days"` enforces the activity check |
+Use **hashtag page URLs** in `directUrls`. The `search` + `searchType: "hashtag"` mode returned
+hashtag metadata rather than posts in testing. Compute the date at run time.
 
-**Pass two, profile details:** rerun with `resultsType: "details"` and `directUrls` set to the
-profile URLs collected in pass one. That returns follower counts and the bio, which is where a
-published business email lives.
+### YouTube: `streamers/youtube-scraper` (8.4K MCP users)
 
-Per-post fields: `likesCount`, `commentsCount`. Profile details carry `followersCount`.
+```json
+{"searchQueries":["freelance designer business tips"],"maxResults":30,"sortingOrder":"relevance","dateFilter":"year","transcriptionAndSubtitle":"NONE"}
+```
 
-## YouTube: `streamers/youtube-scraper`
+## Step 5: recent posts for survivors
 
-| Field | Type | Use |
-|---|---|---|
-| `searchQueries` | array | Audience language |
-| `maxResults` | integer | Default cap 30 |
-| `sortingOrder` | enum | `relevance`, `rating`, `date`, `views` |
-| `dateFilter` | enum | `year` for the activity check |
-| `startUrls` | array | Specific channels |
-| `sortVideosBy` | enum | `NEWEST`, `POPULAR`, `OLDEST`. Use `NEWEST`. |
-| `transcriptionAndSubtitle` | enum | Leave `NONE`. Transcription costs materially more. |
-| `aiVideoSummary` | boolean | Leave `false` for a shortlist run |
+### Instagram: `apify/instagram-profile-scraper` (21K MCP users, $0.0026 per profile)
 
-Channel about pages are where YouTube creators publish a business email.
+```json
+{"usernames":["handle1","handle2"]}
+```
+
+Returns `followersCount`, `biography`, `externalUrls`, `businessCategoryName`, `isBusinessAccount`
+and `latestPosts[]` (12 posts) with `likesCount`, `commentsCount`, `timestamp`, `isPinned`,
+`paidPartnership`, `url`. That covers engagement, activity and sponsored share in one call. Leave
+`includeAboutSection` off; it bills separately.
+
+### TikTok: `clockworks/tiktok-scraper` with profiles
+
+```json
+{"profiles":["handle1","handle2"],"profileScrapeSections":["videos"],"profileSorting":"latest","resultsPerPage":12,"excludePinnedPosts":true,"scrapeAdditionalAuthorMeta":true}
+```
+
+`profileSorting: "latest"`; `popular` inflates engagement. Per-video fields: `diggCount`,
+`commentCount`, `shareCount`, `playCount`, `createTimeISO`, `isPinned`; author meta carries
+`fans` (followers) and the bio.
+
+### YouTube: `streamers/youtube-channel-scraper` (2.9K users)
+
+```json
+{"startUrls":[{"url":"https://www.youtube.com/@channel"}],"maxResults":12}
+```
+
+Per-video `viewCount`, `likes`, `commentsCount`, `date`; channel stats such as
+`numberOfSubscribers` repeat on every row. The business email sits on the channel's about page,
+often behind a sign-in; record "not visible" rather than guessing.
 
 ## Engagement maths
 
 ```
-TikTok    per post: (diggCount + commentCount + shareCount) / playCount
-Instagram per post: (likesCount + commentsCount) / followersCount
-YouTube   per video: (likes + comments) / viewCount
+TikTok    (diggCount + commentCount + shareCount) / playCount
+Instagram (likesCount + commentsCount) / followersCount
+YouTube   (likes + comments) / viewCount
 ```
 
-Take the **median** across the last 12 non-pinned posts. A mean hides a creator whose normal output
-lands flat behind one viral hit. Report the spread alongside the median: a consistent creator is
-easier to brief than an occasional spiker.
-
-Reference bands in the 10,000 to 100,000 follower range, as orientation rather than a cutoff:
+Exclude pinned posts. Median over up to 12 most recent remaining posts. Report median, min, max
+and posts used.
 
 | Platform | Healthy | Strong |
 |---|---|---|
@@ -81,20 +83,4 @@ Reference bands in the 10,000 to 100,000 follower range, as orientation rather t
 | Instagram | above 3% | above 6% |
 | YouTube | above 2% | above 4% |
 
-## Exclusion rules
-
-Apply before ranking.
-
-| Signal | Meaning |
-|---|---|
-| Fewer than 3 posts in 60 days | Dormant account |
-| Under 1% engagement with 50,000+ followers | Bought audience |
-| Comment-to-like ratio under roughly 1:200 with high likes | Engagement pod |
-| More than half the feed is sponsored | Audience has stopped believing them |
-
-## Contact collection
-
-Take only the business email a creator published in their bio or channel about page, which is what
-it is there for. Follow a link-in-bio page one hop and read the contact address there. Stop at that
-point. Do not guess an address from a name, and do not collect personal contact details that were
-not offered for business contact.
+Orientation bands for 10K to 100K accounts, not cutoffs; they vary by niche.

@@ -1,14 +1,17 @@
 # Actor reference
 
-Every Actor listed here was verified public and not deprecated on 2026-09-16. All are
-pay-per-event. Resolve the input schema at runtime before building an input; the fields below are
-the ones that matter, not the full list.
+Every Actor listed here was verified public and not deprecated on 2026-09-16, and the lane A
+Actor re-checked on 2026-10-04. All are pay-per-event. Resolve the input schema at runtime before
+building an input; the fields below are the ones that matter, not the full list.
 
 ## Lane A: local and independent businesses
 
-### `lukaskrivka/google-maps-with-contact-details`
+### `compass/crawler-google-places`
 
-Google Maps search plus contact enrichment in one run, so there is no second call to make.
+The Maps Actor real MCP users pick (about 25K users in 90 days, against 2.8K for the wrapper
+below). Search, place details, website contacts and person enrichment run in one launch via its
+add-ons. `lukaskrivka/google-maps-with-contact-details` exposes the same fields and is a valid
+fallback if this one is unavailable.
 
 | Field | Type | Use |
 |---|---|---|
@@ -18,7 +21,8 @@ Google Maps search plus contact enrichment in one run, so there is no second cal
 | `language` | enum | `"en"` unless the builder specifies |
 | `scrapePlaceDetailPage` | boolean | `true`. Needed for phone, hours, full address. |
 | `skipClosedPlaces` | boolean | `true`. Closed businesses are dead leads. |
-| `website` | enum | `"withWebsite"`. Filters before billing; no site means no email. |
+| `website` | enum | `"withWebsite"` for email lists: filters before billing. `"withoutWebsite"` for builders selling websites or booking pages: phones, no emails. |
+| `scrapeContacts` | boolean | `true` to crawl each place's website for contacts (billed per place) |
 | `placeMinimumStars` | enum | `""`, `"three"`, `"four"` and half steps. Cheaper than post-filtering. |
 | `maximumLeadsEnrichmentRecords` | integer | People per business. Default 3. **Never `0`**, which disables enrichment. |
 | `leadsEnrichmentDepartments` | array | `[]` for any department |

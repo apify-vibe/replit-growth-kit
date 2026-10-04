@@ -1,6 +1,6 @@
 ---
 name: open-web-lead-engine
-description: Use when a Replit builder wants a first outbound list for the app they are building and their buyers are not in a contact database. Inspect the app, judge outbound fit, derive an ICP, then source leads from the open web rather than from a B2B database, meaning local businesses from Google Maps, companies from search results and people from public profiles, each enriched with a verified email from the company's own website. Covers the buyers Apollo and ZoomInfo miss, meaning local and independent businesses, non-US companies, pre-seed startups, and anyone without a LinkedIn footprint. Ends at a scored, deduplicated CSV behind a cost gate. Never sends anything; hand the CSV to the Cold Email Launch skill to build the sequence.
+description: Use when a Replit builder wants a first outbound lead list for the app they are building and their buyers are not in a contact database. Inspect the app, judge outbound fit, write the ICP as checkable criteria, then source leads from the open web (local businesses from Google Maps, companies from search results, contacts crawled from company websites), covering the buyers Apollo and ZoomInfo miss, such as independent businesses, non-US companies and pre-seed startups. Pilots before scaling and gates spend per step. Ends at a scored, deduplicated leads CSV plus a review list and an excluded list. Never sends anything.
 metadata:
   motion: outbound
   vendor: apify
@@ -12,178 +12,148 @@ This skill is designed to run inside a Replit workspace with Replit Agent. It re
 codebase and project context directly. Import it into Replit rather than running it elsewhere.
 
 Build a first outbound list for the app in this workspace, sourced from the open web. You end with
-a scored CSV and a run you can open in Apify Console. You do not end with a sent email.
+a scored CSV the builder can review and runs they can open in Apify Console. You do not end with a
+sent email.
+
+**Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
+Apify, the one-gate-per-step rule, pilots and evidence rules. Actor inputs and traps are in
+[references/actors.md](references/actors.md).
 
 ## When to use something else
 
-Say this out loud to the builder when it applies. It saves their money and it is true.
+Say this to the builder when it applies. It saves their money and it is true.
 
-| Situation | Use instead |
+| Situation | Better tool |
 |---|---|
-| Buyers are US tech companies with 50+ employees | Apollo or ZoomInfo. Their database already holds these rows and costs less per row than scraping. |
-| You already have the list and need sequencing | The Cold Email Launch skill. |
-| You want to size a market, not contact it | The ICP & Market Sizing skill. |
+| Buyers are US tech companies with 50+ employees | Apollo or ZoomInfo. Their database already holds these rows, cheaper per row than scraping. |
+| You already have the list and need sequencing | A sequencing workflow. Check whether a Cold Email Launch skill is installed. |
+| You want to size a market, not contact it | A market-sizing workflow. Check whether an ICP & Market Sizing skill is installed. |
 
 This skill earns its place when the buyer has no database row: a bakery, a Brazilian logistics
-firm, a two-person agency, a pre-seed startup with a landing page and no LinkedIn company profile.
+firm, a two-person agency, a gym with no website, a pre-seed startup with a landing page.
 
 ## Workflow
 
 ```
 - [ ] 1. Inspect the app
 - [ ] 2. Judge outbound fit, stop if it fails
-- [ ] 3. Derive the ICP and pick a sourcing lane
-- [ ] 4. Estimate cost and gate
-- [ ] 5. Source and enrich
-- [ ] 6. Filter, score, deduplicate
-- [ ] 7. Deliver the CSV and hand off
+- [ ] 3. Write the ICP as criteria and pick a lane
+- [ ] 4. Pilot (gated)
+- [ ] 5. Scale and enrich (gated)
+- [ ] 6. Sort every row: lead, review or excluded
+- [ ] 7. Deliver and hand off
 ```
 
 ### 1. Inspect the app
 
-Read the workspace before asking the builder anything. Look at the README, landing page copy,
-route names, database models, pricing page, and seed data. From those, write down in one paragraph
-what the product does, who pays for it, and what problem it removes.
-
-Show that paragraph to the builder and ask them to correct it. One round, not an interview.
+Read the workspace before asking anything: README, landing copy, routes, models, pricing page,
+seed data. Write one paragraph on what the product does, who pays for it, and what problem it
+removes. Show it to the builder and let them correct it once.
 
 ### 2. Judge outbound fit
 
-Outbound works when the buyer is identifiable, the purchase involves a decision rather than an
-impulse, and the value is worth an email. Score three questions:
+Outbound works when the buyer is identifiable, the purchase is a decision rather than an impulse,
+and the value is worth an email. Score three questions:
 
 - Can you name the job title that buys this? A consumer app fails here.
-- Is the price above roughly $20/month or a one-off of comparable size? Below that, paid social
-  and UGC beat outbound on cost per customer.
-- Does the buyer sit at a company with a website? No website means no email to find.
+- Is the price above roughly $20/month, or a one-off of similar size? Below that, paid social and
+  UGC beat outbound on cost per customer.
+- Does the buyer sit at a business you can find online? No findable business, no lead.
 
-Two or three yes answers: continue. Zero or one: stop, say why, and point them at the Consumer &
-Viral Potential Assessment and UGC Launch Kit skills instead. Do not run a paid scrape to be
-polite.
+Two or three yes: continue. Zero or one: stop, say why, and point the builder to consumer growth
+instead (check whether the Consumer & Viral Potential Assessment or UGC Launch Kit skill is
+installed; otherwise describe the next step yourself). Do not run a paid scrape to be polite.
 
-### 3. Derive the ICP and pick a sourcing lane
+### 3. Write the ICP as criteria and pick a lane
 
-Turn the paragraph from step 1 into an ICP with four fields: business type, geography, size signal,
-and the job title that buys. Then pick exactly one lane.
+Write the ICP as four criteria, each marked **required** or **signal**: business type, geography,
+size, and the buyer role. A row only counts as a lead when every required criterion is supported
+by the row's own data. The search query that found it is not evidence.
+
+Then pick one lane:
 
 | Lane | Use when | Actor |
 |---|---|---|
-| **A. Local and independent businesses** | The ICP is a business type in a place. Restaurants, clinics, gyms, salons, contractors, hotels. | `lukaskrivka/google-maps-with-contact-details` |
-| **B. You already have company websites** | The builder has a domain list, a signup export, or a directory. | `vdrmota/contact-info-scraper` |
-| **C. Companies you have to find first** | The ICP is a category with no map presence. SaaS tools, agencies, marketplaces. | `apify/google-search-scraper` into lane B |
+| **A. Local businesses** | The ICP is a business type in a place: restaurants, clinics, gyms, salons, contractors, hotels | `compass/crawler-google-places` with its contact and lead add-ons |
+| **B. You have company websites** | The builder has a domain list, a signup export or a directory | `vdrmota/contact-info-scraper` |
+| **C. Companies you must find first** | A category with no map presence: agencies, SaaS, marketplaces | `apify/google-search-scraper`, then lane B on the results |
 
-Resolve the Actor and read its live input schema before building an input. Never guess a field
-name. Full field tables are in [references/actors.md](references/actors.md).
+Lane A can also target businesses **without** a website (`website: "withoutWebsite"`), which is
+the list a builder selling websites or booking pages wants. Those rows will have phones, not
+emails; say so up front.
 
-### 4. Estimate cost and gate
+### 4. Pilot (gated)
 
-Compute the expected row count before running anything:
+Run a pilot of 10 to 20 companies in one gate. Before it returns, write down what counts as
+relevant. Count relevant rows against those criteria: below 50%, stop, show the pilot and suggest
+one change to the query or location (a new gate). Directories, job boards and marketplaces are
+not companies; they never count as relevant.
 
-```
-Lane A:  maxCrawledPlacesPerSearch x maximumLeadsEnrichmentRecords
-Lane B:  number of start URLs x maximumLeadsEnrichmentRecords
-Lane C:  maxPagesPerQuery x 10 results per page, then lane B on the survivors
-```
+### 5. Scale and enrich (gated)
 
-Default caps, which you raise only when the builder asks: 50 places per search, 3 enrichment
-records per company, 2 search pages per query.
+Show the expected count before running. For lane A it multiplies:
+`places per search × searches` places, plus `places × maximumLeadsEnrichmentRecords` person
+records, plus each social network enabled, each billed per item. Default caps: 50 places per
+search, 3 people per company, Instagram and Facebook only. Lane C's search and its lane B
+enrichment are separate steps with separate gates.
 
-Show the builder the expected row count, the Actors that will run, and that these are pay-per-event
-Actors billed against the workspace Apify key. Wait for an explicit yes. Then run.
+Settings that carry the quality of the list:
+- `skipClosedPlaces: true`. Closed businesses are dead leads.
+- `website: "withWebsite"` for email lists. It drops places with nowhere to find an email, before
+  billing.
+- `verifyLeadsEnrichmentEmails: true` whenever enrichment is on. It is the bounce-rate control.
+- `maximumLeadsEnrichmentRecords` above zero; zero switches the enrichment off.
 
-### 5. Source and enrich
+### 6. Sort every row: lead, review or excluded
 
-**Lane A.** One run of `lukaskrivka/google-maps-with-contact-details` does the search and the
-contact enrichment together, so there is no second call to make.
+Every sourced row lands in exactly one file, with a reason. Nothing is silently dropped.
 
-```json
-{
-  "searchStringsArray": ["dentists"],
-  "locationQuery": "Berlin, Germany",
-  "maxCrawledPlacesPerSearch": 50,
-  "language": "en",
-  "scrapePlaceDetailPage": true,
-  "skipClosedPlaces": true,
-  "website": "withWebsite",
-  "maximumLeadsEnrichmentRecords": 3,
-  "verifyLeadsEnrichmentEmails": true,
-  "scrapeSocialMediaProfiles": {"instagrams": true, "facebooks": true}
-}
-```
+1. **Excluded.** Spurious enrichment (the person's `companyWebsite` hostname differs from the
+   company's own), non-companies (directories, job boards, marketplaces), and explicit mismatches
+   on a required criterion (`out_of_icp_geography`, `out_of_icp_size`, ...).
+2. **Review.** A required criterion is unknown, or no identifiable person was returned. A company
+   name is not a person: a lead needs a first and last name from the row. Contacts that may belong
+   to a different company also go here.
+3. **Lead.** Every required criterion supported, a named person, and a business contact.
 
-Four of those are load-bearing. `skipClosedPlaces` drops businesses that no longer exist.
-`website: "withWebsite"` drops places with nowhere to find an email, before billing.
-`verifyLeadsEnrichmentEmails` is what separates a deliverable list from a bounce list. Set it to
-`true` on every run. `maximumLeadsEnrichmentRecords` must never be `0`, which silently turns off
-the enrichment this whole lane exists for.
+Score leads only, 0 to 100, from what the row actually contains: verified email 40, a named person
+whose title matches the buyer role 30, phone 10, active social presence 10, the size signal 10.
+"Verified" means the provider explicitly returned a valid status for that exact email; unknown,
+catch-all, risky or missing statuses score 0 and the raw status stays in the row. A social URL
+alone is not "active". Write the components next to the score and check they add up.
 
-**Lane B.** `vdrmota/contact-info-scraper` crawls each company site for contacts.
+Deduplicate leads on lowercased email, or on lowercased first name + last name + company domain
+when there is no email. Never on domain alone: two branches of one business stay two rows.
 
-```json
-{
-  "startUrls": [{"url": "https://example.com"}],
-  "maxRequestsPerStartUrl": 20,
-  "maxDepth": 2,
-  "sameDomain": true,
-  "mergeContacts": true,
-  "maximumLeadsEnrichmentRecords": 3,
-  "verifyLeadsEnrichmentEmails": true,
-  "proxyConfig": {"useApifyProxy": true}
-}
-```
+### 7. Deliver and hand off
 
-**Lane C.** Run `apify/google-search-scraper` first to find the companies, then feed their domains
-into lane B. Queries work best as a pattern plus a qualifier, for example
-`"boutique ecommerce agency" London -jobs -reddit`. Set `maxPagesPerQuery: 2` and
-`resultsPerPage` at its default. Strip directories, marketplaces and job boards from the results
-before the lane B run: they are not companies and enriching them wastes the budget.
+Write to the workspace root, even after an empty or stopped pilot (CSVs keep their header):
 
-### 6. Filter, score, deduplicate
+- `leads.csv`: `company`, `company_domain`, `first_name`, `last_name`, `job_title`, `email`,
+  `email_status` (raw provider value), `phone`, `city`, `country`, `score`, `score_components`,
+  `source_query`, `source_url`, `source_actor`, `source_run_id`. Sorted by score.
+- `review_needed_leads.csv`: same columns plus `review_reason`. Named owners first.
+- `excluded_leads.csv`: same columns plus `exclusion_reason`.
+- `run_metadata.json`: the ICP criteria, lane, run and dataset IDs, caps, gate answers, counts per
+  stage (`sourced`, `excluded`, `review_needed`, `deduplicated`, `leads`), and actual usage.
 
-In this order.
+If `leads.csv` is empty, say so first, and name the criterion that blocked it. Suggest the smallest
+change that would help; never relax a required criterion on your own.
 
-1. **Spurious-match filter, always on.** Drop any enriched person whose `companyWebsite` hostname
-   does not match the company's own hostname. Enrichment services fall back to global records and
-   attribute a stranger to your lead. Count the drops; do not hide them.
-2. **Score.** Give each row a 0-100 score built from what you actually have: verified email (40),
-   named person with a job title matching the ICP title (30), phone (10), active social presence
-   (10), and a size signal such as review count or employee count (10). Write the components into
-   the CSV so the builder can argue with the score.
-3. **Deduplicate** on lowercased email where present, otherwise on lowercased
-   `first_name + last_name + company_domain`.
-4. **Keep the misses.** A company with no person found stays in the CSV with blank person fields.
-   The builder needs to see who was searched and not found. Never invent an email or a name.
-
-### 7. Deliver the CSV and hand off
-
-Write `leads.csv` and `run_metadata.json` into the workspace.
-
-`leads.csv` columns: `company`, `company_domain`, `first_name`, `last_name`, `job_title`, `email`,
-`email_verified`, `phone`, `city`, `country`, `source_query`, `score`, `score_components`,
-`source_actor`, `source_run_id`.
-
-`run_metadata.json`: the Apify run IDs, dataset IDs, the ICP you derived, per-step counts
-(`sourced`, `enriched`, `spurious_dropped`, `deduplicated`, `kept`), and the caps you used.
-
-Close with three things: the kept-row count, a link to the run in Apify Console so the builder can
-check the real cost, and the handoff line. The handoff is the Cold Email Launch skill, which turns
-this CSV into a sequence. This skill does not write or send email.
+Close with the lead count, the review count, a link to the runs in Apify Console, and the next
+step. If a Cold Email Launch skill is installed, offer the CSV to it; otherwise explain how to
+review the list and build a sequence. This skill does not write or send email.
 
 ## Troubleshooting
 
-- **Zero rows on lane A.** The location was too broad. Maps searches resolve best at city level.
-  Swap a country for a city and rerun.
-- **Rows with no email.** Expected on a slice of any list. Check `website: "withWebsite"` was set.
-  If most rows are empty, the vertical probably hides contacts behind forms, which no scraper
-  solves. Report the rate and let the builder decide.
-- **Every enriched person dropped by the spurious filter.** The enrichment service returned only
-  global fallback records. There is no fix. Surface the count and deliver the companies without
-  people.
-- **Run times out.** Enrichment adds 30 to 90 seconds per company. The dataset already holds
-  partial results; pull it by dataset ID rather than rerunning.
-- **`401` or `403` from the API.** The workspace Apify integration is not connected, or
-  `APIFY_TOKEN` is missing from Replit Secrets. Send the builder to Apify Console, Settings,
-  Integrations.
+- **Zero rows on lane A.** The location is probably too broad. Maps searches work best at city
+  level. Swap a country for a city in a new gate.
+- **Most rows have no email.** Some verticals hide contacts behind forms; no scraper fixes that.
+  Report the rate and let the builder decide.
+- **Every enriched person excluded as spurious.** The enrichment returned only global fallback
+  records. Deliver the companies to review without people.
+- **Run times out.** The dataset already holds partial results. Pull it by dataset ID; a retry is
+  a new gate.
+- **`401` or `403`.** Follow the runtime reference; do not assume a missing token.
 
-Cost guardrails and error recovery shared across these skills:
-[references/gotchas.md](references/gotchas.md).
+Cost guardrails and recovery shared across these skills: [references/gotchas.md](references/gotchas.md).
