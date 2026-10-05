@@ -124,14 +124,16 @@ FREE) charged whole per 25 profiles, so pilot with exactly one page.
 | `locations` | array | Plain text. Use `"United Kingdom"`, not `"UK"` (resolves to Ukraine). |
 | `currentCompanies` | array | Full LinkedIn company URLs |
 | `companyHeadcount` | array | LinkedIn bucket letters; check the size of returned companies rather than trusting the bucket |
+| `industryIds` | array | Filters the **person's** industry, not the company's: in testing it let energy, robotics and insurance firms through |
 | `maxItems`, `takePages` | integer | Set both |
 
 Output: `firstName`, `lastName`, `linkedinUrl`, `headline`, `location.parsed.countryCode`,
 `currentPosition[]` (`position`, `companyName`, `companyLinkedinUrl`), `companyWebsites[]`, and
 `emails[]` with `status` (`valid`, `risky`) and `qualityScore`. Sample: 3/5 valid, 2/5 risky.
 
-Company size is not in the profile output. When size is a required criterion, check it with
-`harvestapi/linkedin-company` ($0.003 per company, `employeeCount`) or send the row to review.
+Company size is in the full output at `currentPosition[].company.employeeCount`. The company's
+headquarters country is not: when company geography is required, check it with
+`harvestapi/linkedin-company` ($0.003 per company, `locations[]`) or send the row to review.
 
 ### Named companies: `harvestapi/linkedin-company-employees`
 
@@ -160,7 +162,9 @@ returned US companies for "Germany". Find companies with the database source or 
 ```
 
 $0.015 per result at the top tier ($0.03 on FREE), 98% run success, `email_status` `Valid` or `Risky`.
-`Risky` means catch-all or unverified: send it through the verifier. Alternative:
+`Risky` means catch-all or unverified: send it through the verifier. Lookups that find nothing are
+billed too. In testing it once returned an address on a different company's domain; accept only
+emails on the company's own domain. Alternative:
 `clearpath/email-finder-api` (`people: [{firstName, surname, domain}]`, filter on `isSafeToSend`,
 billed per pattern tried, 84% run success).
 
@@ -179,15 +183,23 @@ FREE ($0.10 per email) and because it cannot tell a missing mailbox from an unre
 
 ```json
 {"startUrls": [{"url": "https://example.com/"}], "extractionMode": "agentic",
- "prompt": "Find the owner, co-owner, founder or general manager of this business. Return name, title and the page URL where it is stated. Return nothing if not stated.",
+ "prompt": "Return JSON {\"business_type\": string, \"people\": [{\"name\": string, \"title\": string, \"url\": string}]}. business_type: what this business is, in a few words. people: only people the site says currently own, founded or manage THIS business (owner, co-owner, founder, managing director, general manager), with the URL of the page that says so. Exclude clients, case-study subjects, testimonials, partners and past owners. Empty list if none is stated.",
  "maxPagesToVisit": 5, "maxCrawlDepth": 2}
 ```
 
-Use `agentic` (`single` does not follow links) and at least 5 pages per site, or the crawl ends on
-menu pages. Billed $0.02 per page that returns a result; a site with no result costs about $0.0005.
-Measured on 6 independent restaurants: 1 hit (2 names, both verbatim on the cited page), 1 site
-blocked, 4 with nothing stated. 45 to 50 seconds per site, so run sites in one batch. Accept a name
-only with its cited URL; spot-check one hit by fetching that page.
+Run option `timeout: 3600` and at most 25 sites per run: the default 900-second timeout cut off
+batches of 53 and 132 sites. This Actor is the exception to the gotchas advice to lower caps rather
+than raise timeouts. Use `agentic` (`single` does not follow links) and at least 5 pages per site,
+or the crawl ends on menu pages.
+
+Billing: about $0.02 per page item it writes, including pages where it found nobody; plan $0.04 to
+$0.10 per site. Measured yield: most of 25 agency sites gave a founder or director (19 leads from
+the case); 1 usable name from 53 independent restaurant sites. Output keys drift from row to row
+unless the prompt fixes them, as above. Spot-check one hit per batch by fetching its cited page:
+it has named a client from a portfolio page as founder, and a 1979 co-founder as current owner.
+
+`business_type` doubles as the evidence for a business-type criterion in lane B, where the
+contact crawl returns no description of the business.
 
 ## Output fields worth mapping
 
@@ -196,7 +208,7 @@ Names vary by Actor. Read a sample row before mapping rather than assuming.
 - Company: `title`, `companyName`, `organization_name`, or the hostname of `website`
 - Person: `firstName`/`lastName` (or `first_name`/`last_name`), `jobTitle`, `title` or `position`
 - Email status, kept raw in `email_status`: `emailStatus` (database), `emails[].status`
-  (LinkedIn), `emailVerification` inside `leadsEnrichment[]` (Maps), `email_status` (finder),
-  `status` (verifier)
+  (LinkedIn), `emailVerification.result` inside `leadsEnrichment[]` (Maps; `ok` is a pass),
+  `email_status` (finder), `status` (verifier)
 - Provenance: `companyWebsite` inside `leadsEnrichment[]` is what the spurious-match filter
   compares against the company's own hostname

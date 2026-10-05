@@ -82,8 +82,9 @@ and the value is worth an email. Score three questions:
 - Does the buyer sit at a business you can find online? No findable business, no lead.
 
 Two or three yes: continue. Zero or one: stop, say why, and point the builder to consumer growth
-instead (check whether the Consumer & Viral Potential Assessment or UGC Launch Kit skill is
-installed; otherwise describe the next step yourself). Do not run a paid scrape to be polite.
+instead: name the installed Growth Kit skills that fit, such as `creator-shortlist` (UGC creators)
+or `demand-signal-scan` (where users talk about the problem), after checking they are installed;
+otherwise describe the next step yourself. Do not run a paid scrape to be polite.
 
 ### 3. Write the ICP as criteria, pick a lane, ask for the budget
 
@@ -150,17 +151,26 @@ Settings that carry the quality of the list:
 - Lane D database: always set `totalResults` (it defaults to 1,000), and set the company-country
   filter when the ICP geography is about the company rather than the person.
 - Lane D LinkedIn: `profileScraperMode: "Full + email search"`; `locations` in plain text
-  (`"United Kingdom"`, never `"UK"`).
+  (`"United Kingdom"`, never `"UK"`). `industryIds` filters the person's industry, not the
+  company's, so check the company's industry on the row.
+- Maps searches drift into neighbouring towns: check each place's address against the ICP
+  geography in step 7.
 
 ### 6. Fill the gaps: name, email, verification (gated)
 
 Rows that are one field short of a lead get one pass each, in this order, within the budget:
 
-1. **No named person, has a website** (lane A and B review rows): run `apify/ai-web-scraper` in
-   `agentic` mode over those sites in one batch, asking for the owner, founder or general manager
-   with the page URL that states it. Expect a minority of hits (measured: 1 in 6 independent
-   restaurants); a miss costs about $0.0005. Keep a name only with its cited URL.
-2. **Named person and company domain, no usable email**: `scalelist/email-finder`.
+1. **No named person, has a website** (lane A and B review rows): run `apify/ai-web-scraper` with
+   the prompt and run settings in `actors.md`. It bills about $0.02 per page it reads, so budget
+   $0.04 to $0.10 per site, and it is slow: batches of up to 25 sites with a one-hour run timeout.
+   It pays off for agencies, studios and other firms with a team page (measured: names for most
+   of 25 agency sites); for restaurants and shops it rarely does (1 usable name from 53 restaurant
+   sites, $0.24), so offer it there only when the builder wants every possible lead. Keep a name
+   only with its cited URL, and only when that page says the person currently holds the role at
+   this business; clients, case-study subjects and past founders go to excluded.
+2. **Named person and company domain, no usable email**: `scalelist/email-finder`. It bills
+   lookups that find nothing, so budget per person looked up. Accept an email only on the
+   company's own domain; a different domain goes to review.
 3. **Any email without a provider status of valid or deliverable** (crawled site emails, finder
    `Risky` results, Maps enrichment emails marked catch-all or unchecked, database sources with no
    status field): `bounceverify/bounceverify-email-verifier`, all in one run. It costs under a
@@ -206,8 +216,8 @@ Score leads only, 0 to 100, from what the row actually contains: verified email 
 whose title matches the buyer role 30, phone 10, social presence 10 (a linked profile with 500+
 followers, or a LinkedIn profile URL; activity is not checked), the size signal 10 (the builder's
 size rule if the row supports it; for local businesses with no headcount, 100+ Google reviews).
-"Verified" means a provider or the verifier explicitly returned `valid` or `deliverable` for that
-exact email; unknown, catch-all, risky or missing statuses score 0 and the raw status stays in the
+"Verified" means a provider or the verifier explicitly returned a passing status for that exact
+email (`valid`, `Valid`, `deliverable`, or Maps' `emailVerification.result: "ok"`); unknown, catch-all, risky or missing statuses score 0 and the raw status stays in the
 row. Write the components next to the score and check they add up.
 
 Deduplicate leads on lowercased email, or on lowercased first name + last name + company domain
@@ -220,14 +230,17 @@ Write to the workspace root, even after an empty or stopped pilot (CSVs keep the
 - `leads.csv`: `company`, `company_domain`, `first_name`, `last_name`, `job_title`, `email`,
   `email_type`, `email_status` (raw provider or verifier value), `email_source` (`provider`,
   `site`, `finder`), `phone`, `linkedin_url`, `city`, `country`, `score`, `score_components`,
-  `source_query`, `source_url`, `source_actor`, `source_run_id`. Sorted by score. When step 6
-  supplied the name or the email, `source_actor` and `source_run_id` name that run and
-  `source_url` the page or record it came from.
+  `source_query`, `source_url`, `source_actor`, `source_run_id`. Sorted by score. When a row
+  draws on several runs (step 6), list every Actor and run ID in source order, separated by
+  `; `, and put the page that states the name in `source_url`.
 - `review_needed_leads.csv`: same columns plus `review_reason`. Named people first.
 - `excluded_leads.csv`: same columns plus `exclusion_reason`.
 - `run_metadata.json`: the ICP criteria, lane, run and dataset IDs, caps, the budget and its
   answer, counts per stage (`sourced`, `excluded`, `review_needed`, `gap_filled`, `deduplicated`,
   `leads`), and actual usage.
+
+If the job stopped before the budget form (fit check failed), `run_metadata.json` holds the fit
+verdict, the reason and empty counts, and no approvals file is written.
 
 If `leads.csv` is empty, say so first, and name the criterion that blocked it. Suggest the smallest
 change that would help; never relax a required criterion on your own.

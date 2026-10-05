@@ -1,0 +1,241 @@
+[
+  {
+    "id": "lead-good-maps",
+    "skill": "open-web-lead-engine",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 5,
+    "runs_listed": 5,
+    "cost_usd": 1.3367,
+    "ungated_runs": [],
+    "ua_attributed": "5/5",
+    "runs": [
+      {
+        "run": "1Gs7Dg6hMvNzVyr7R",
+        "status": "SUCCEEDED",
+        "usd": 0.1342,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "yDtMYAx3RFievAMr4",
+        "status": "SUCCEEDED",
+        "usd": 0.8506,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "Etw16GVMMmSc1eMU3",
+        "status": "TIMED-OUT",
+        "usd": 0.241,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "pSO3BfVbJlldbkWRr",
+        "status": "SUCCEEDED",
+        "usd": 0.075,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "AhuwSxnLLLXAcx6Ta",
+        "status": "SUCCEEDED",
+        "usd": 0.0359,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      }
+    ],
+    "main_rows": 10,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "source_url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
+  },
+  {
+    "id": "lead-good-search",
+    "skill": "open-web-lead-engine",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 6,
+    "runs_listed": 6,
+    "cost_usd": 3.3312,
+    "ungated_runs": [],
+    "ua_attributed": "6/6",
+    "runs": [
+      {
+        "run": "Gq1RxqY9wrjojvUQ7",
+        "status": "SUCCEEDED",
+        "usd": 0.188,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "2Ok2baWXRw9has54r",
+        "status": "SUCCEEDED",
+        "usd": 1.9309,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "rHRcfctCaO2IJoYap",
+        "status": "TIMED-OUT",
+        "usd": 0.241,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "jskWCsGz9X9UOOgqF",
+        "status": "SUCCEEDED",
+        "usd": 0.562,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "XMc3zRTcs0FcnLVC6",
+        "status": "SUCCEEDED",
+        "usd": 0.3901,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "SE7ZLpVyrqoNDEqWR",
+        "status": "SUCCEEDED",
+        "usd": 0.0192,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      }
+    ],
+    "main_rows": 44,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "source_url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
+  },
+  {
+    "id": "lead-bad-consumer",
+    "skill": "open-web-lead-engine",
+    "fit": "bad",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 0,
+    "runs_listed": 0,
+    "cost_usd": 0.0,
+    "ungated_runs": [],
+    "ua_attributed": "0/0",
+    "runs": [],
+    "G2_runs_ok": true,
+    "main_rows": 0
+  },
+  {
+    "id": "lead-good-linkedin-title",
+    "skill": "open-web-lead-engine",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 6,
+    "runs_listed": 6,
+    "cost_usd": 1.1189,
+    "ungated_runs": [],
+    "ua_attributed": "6/6",
+    "runs": [
+      {
+        "run": "yF9DgCTVcjkj35uDm",
+        "status": "SUCCEEDED",
+        "usd": 0.25,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "R1r1z6zJEVnuYqW2X",
+        "status": "SUCCEEDED",
+        "usd": 0.25,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "3svaddwZHklsNhTy5",
+        "status": "SUCCEEDED",
+        "usd": 0.34,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "vOAX4hzATurDwAnfa",
+        "status": "SUCCEEDED",
+        "usd": 0.2011,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "U9WjdPlF3HxwNCALi",
+        "status": "SUCCEEDED",
+        "usd": 0.075,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "HdyUOTNkDsraIv0Qz",
+        "status": "SUCCEEDED",
+        "usd": 0.0028,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      }
+    ],
+    "main_rows": 29,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "source_url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
+  },
+  {
+    "id": "lead-good-domains",
+    "skill": "open-web-lead-engine",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 5,
+    "runs_listed": 5,
+    "cost_usd": 1.3974,
+    "ungated_runs": [],
+    "ua_attributed": "5/5",
+    "runs": [
+      {
+        "run": "z2kcfFekDucbczzXM",
+        "status": "SUCCEEDED",
+        "usd": 0.0399,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "9ywR2VEfrbD7HjRZ7",
+        "status": "SUCCEEDED",
+        "usd": 0.0562,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "iAfF0pqdpGrZhAxgL",
+        "status": "TIMED-OUT",
+        "usd": 1.041,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "rg5quMXqRsFzcQm2D",
+        "status": "SUCCEEDED",
+        "usd": 0.24,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "e8TKaYUhVd50S3nOK",
+        "status": "SUCCEEDED",
+        "usd": 0.0203,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      }
+    ],
+    "main_rows": 19,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "source_url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
+  }
+]
