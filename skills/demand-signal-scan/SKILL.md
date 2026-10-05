@@ -1,6 +1,6 @@
 ---
 name: demand-signal-scan
-description: Use when a Replit builder does not yet know who wants the app they are building, where those people talk, or how they describe the problem. Inspect the app, name the problem and the workaround people use today, then scan Reddit, X, YouTube comments, Hacker News and search results for people describing it in their own words. Returns verbatim quotes with links (the copy for every other growth motion), ranked communities to launch in, and recent public threads worth a helpful reply. Probes before spending, pilots each platform, asks for one spend budget per job, and ends at a written report. Never posts, replies or messages anyone.
+description: Use when a Replit builder does not yet know who wants the app they are building, where those people talk, or how they describe the problem. Inspect the app, name the problem and the workaround people use today, size how many people search for it, then scan Reddit, X, LinkedIn comments, YouTube and TikTok comments, bad reviews of incumbent tools, GitHub issues, Hacker News and search results for people describing it in their own words. Returns monthly search demand, verbatim quotes with links (the copy for every other growth motion), ranked communities to launch in, and recent public threads worth a helpful reply. Probes before spending, pilots each platform, asks for one spend budget per job, and ends at a written report. Never posts, replies or messages anyone.
 metadata:
   motion: growth
   vendor: apify
@@ -27,10 +27,15 @@ Actor is unavailable, as the runtime reference describes.
 
 | Step | Actor (exact ID) |
 |---|---|
-| Probe, find subreddits, search lane | `apify/google-search-scraper` |
-| Reddit | `trudax/reddit-scraper-lite`; fallback `fatihtahta/reddit-scraper-search-fast` |
+| Probe, find subreddits and LinkedIn posts, search lane, related questions | `apify/google-search-scraper` |
+| Monthly search volume | `aitorsm/keyword-volume` |
+| Reddit | `fatihtahta/reddit-scraper-search-fast`; backup `trudax/reddit-scraper-lite` |
 | X | `apidojo/tweet-scraper` |
+| LinkedIn comments | `harvestapi/linkedin-post-comments` |
 | YouTube videos, then their comments | `streamers/youtube-scraper`, then `streamers/youtube-comments-scraper` |
+| TikTok videos, then their comments | `clockworks/tiktok-scraper`, then `clockworks/tiktok-comments-scraper` |
+| Bad reviews of incumbents | `zen-studio/capterra-reviews-scraper`, `automation-lab/g2-scraper`, `thewolves/appstore-reviews-scraper`, `thewolves/google-play-reviews-scraper` |
+| GitHub issues, Stack Overflow | `apify/web-fetch` on the public APIs |
 | Hacker News | `ryanclinton/hackernews-search` |
 
 If the Apify MCP server is connected, call Apify through it (tool mapping in the runtime
@@ -45,10 +50,11 @@ fail while reads work, follow "When run starts fail" in the runtime reference.
 - [ ] 1. Inspect the app and name the problem
 - [ ] 2. Build the search vocabulary
 - [ ] 3. Probe: is this discussed in public? (gated, cheap)
-- [ ] 4. Pilot each platform (gated)
-- [ ] 5. Collect the platforms that passed (gated)
-- [ ] 6. Extract quotes, rank communities, pick threads
-- [ ] 7. Deliver the report
+- [ ] 4. Size the demand (gated, cheap)
+- [ ] 5. Pilot each platform (gated)
+- [ ] 6. Collect the platforms that passed (gated)
+- [ ] 7. Extract quotes, rank communities, pick threads
+- [ ] 8. Deliver the report
 ```
 
 ### 1. Inspect the app and name the problem
@@ -84,27 +90,50 @@ listicles: stop and say so. Some real problems are never discussed in public, co
 B2B and internal enterprise tooling. Write the empty report explaining that, and point the
 builder to a firmographic approach (check whether an ICP & Market Sizing skill is installed).
 
-### 4. Pilot each platform (gated)
+### 4. Size the demand (gated, cheap)
+
+Quotes show that people have the problem; they do not show how many. Take 5 to 10 phrases from
+step 2, favouring workaround and shopping phrases (people search for those; they post complaints),
+plus the category's plain name ("staff scheduling app"):
+
+- **Monthly volume:** `aitorsm/keyword-volume` for the builder's main country. Report the median
+  of the 12 monthly values next to the headline average, because single months spike. A volume of
+  10 means too low to measure, not ten.
+- **What people ask:** the `relatedQueries` and `peopleAlsoAsk` questions from the search runs
+  you already pay for (step 3 and the search lane). They are free phrasing for landing copy.
+
+Say plainly in the report what this is: interest in the problem and the category, not demand for
+this app. A high cost per click (`cpc`) means competitors pay to reach these searchers, which is a
+signal of a paying market and of a crowded one.
+
+### 5. Pilot each platform (gated)
 
 Pick platforms that fit the audience before asking for the gate:
 
 | Audience | Platforms |
 |---|---|
-| B2B operations, finance, admin | Reddit, search |
-| Developers and technical buyers | Reddit, Hacker News, X |
-| Consumers under 35 | Reddit, YouTube comments, X |
-| Local services and trades | Search (forums, Facebook groups that rank), Reddit |
+| B2B operations, finance, HR, admin | Reddit, LinkedIn comments, incumbent reviews, search |
+| Developers and technical buyers | GitHub issues, Hacker News, Reddit, X |
+| Consumers under 35 | Reddit, TikTok comments, YouTube comments, app-store reviews |
+| Local services and trades | Search (forums, Facebook groups that rank), Reddit, incumbent reviews |
 | Creators and freelancers | Reddit, X, YouTube comments |
+
+Incumbent reviews need named competitors: take them from the app's own copy, or from a
+competitor teardown if one ran. Without competitors, skip that source.
 
 Pilot each chosen platform with 10 to 20 threads in one gate. Before it runs, write what counts as
 relevant: the author of the post, or of a top comment, describes the problem or the workaround.
 Vendors and builders pitching their own app do not count. Use the pilot bar and the one-rewrite
-rule from the runtime reference (30% of threads for Reddit, X and YouTube comments).
+rule from the runtime reference: 30% of threads for conversational sources (Reddit, X, LinkedIn,
+YouTube and TikTok comments), 50% for reviews, GitHub issues and search. A review or issue is
+relevant when it describes a problem this app removes, not any complaint about the incumbent.
 
-### 5. Collect the platforms that passed (gated)
+### 6. Collect the platforms that passed (gated)
 
-Default caps: Reddit 100 posts with 10 comments each; X 200 posts; YouTube comments on the top 5
-to 10 videos, 50 comments each; Hacker News 30 stories; search 2 pages per phrase.
+Default caps: Reddit 100 posts with 10 comments each; X 200 posts; YouTube and TikTok comments on
+the top 5 to 10 videos, 50 comments each; LinkedIn comments on 5 to 10 posts, 50 each; incumbent
+reviews 100 low-star reviews per competitor; GitHub 30 issues per repo; Hacker News 30 stories;
+search 2 pages per phrase.
 
 - **Reddit, in two steps.** Site-wide keyword search returns mostly noise (1 relevant thread in
   20 in testing). First find the communities: one `apify/google-search-scraper` query per phrase
@@ -114,8 +143,8 @@ to 10 videos, 50 comments each; Hacker News 30 stories; search 2 pages per phras
   relevant in testing. Run one subreddit per run, one run at a time: the Actor's item cap is shared
   across all start URLs and comments count toward it, so the first subreddit can use it all up.
   If a Reddit run reports SUCCEEDED with 0 items, that is a blocked scrape, not an empty
-  community: pilot the fallback Actor `fatihtahta/reddit-scraper-search-fast` in a new gate (see
-  `actors.md`). Short keywords (`unpaid invoice`) return results where long phrases return none.
+  community: retry once with the backup Actor (see `actors.md`). Short keywords
+  (`unpaid invoice`) return results where long phrases return none.
 - **X:** one pass sorted `Latest` for warm threads, one sorted `Top` for phrasing. Set
   `minimumFavorites: 2` from the start and add `-giveaway -promo -discount` style exclusions;
   unfiltered X searches come back mostly as vendor promotion.
@@ -125,8 +154,21 @@ to 10 videos, 50 comments each; Hacker News 30 stories; search 2 pages per phras
   ("3 months ago"); keep that text rather than inventing a date.
 - **Hacker News:** for technical audiences; `Ask HN` and `Show HN` threads carry both the pain and
   the competitors.
+- **LinkedIn:** find posts with `apify/google-search-scraper`
+  (`site:linkedin.com/posts <complaint phrase>`), not with LinkedIn's own post search, which
+  returned vendors and off-topic posts in testing. Then pull comments on the 5 to 10 posts that
+  match. Keep comments whose author headline reads as the buyer; vendors and consultants selling
+  a fix go to the competitor list. Quote comments only; the post's search snippet is context.
+- **TikTok:** pick complaint-shaped videos with 10 or more comments, as on YouTube, then pull
+  their comments. App promotions dominate search results; skip them.
+- **Incumbent reviews:** 1 to 2 stars, last 12 months, per the low-star inputs in `actors.md`.
+  Reviews are the most structured pain there is: the reviewer is a buyer by definition.
+- **GitHub issues:** open issues on the competitors' or the workaround's repos, sorted by
+  reactions. Thumbs-up counts are people asking for the same thing; record them as engagement.
+  Use Stack Overflow only when the pain is about building or running something, not choosing a
+  tool.
 
-### 6. Extract quotes, rank communities, pick threads
+### 7. Extract quotes, rank communities, pick threads
 
 **Verbatim quotes.** Pull 15 to 25 sentences where a person who has the problem states it.
 Leave out builders promoting their own app; list those separately as competitors, which is useful
@@ -147,16 +189,21 @@ and nobody has sold them anything yet: URL, date, one-line summary, and what a u
 say. Tell the builder plainly: a helpful public reply is welcome in most communities; a cold DM to
 these people is not. This skill produces threads to take part in, not a list to message.
 
-### 7. Deliver the report
+### 8. Deliver the report
 
 Write to the workspace root, even if the probe or a pilot stopped the scan:
 
-- `demand-signals.md`: the problem sentence, the quotes with links, the ranked communities, the
-  warm threads, what the language suggests for positioning, and what was skipped or failed and why.
-  Quotes above everything else.
+- `demand-signals.md`: the problem sentence, the quotes with links, a "How big is it" section
+  (search volume and the questions people ask), the ranked communities, the warm threads, what the
+  language suggests for positioning, and what was skipped or failed and why. Quotes above
+  everything else.
 - `signals.csv`: `platform`, `url`, `posted_at`, `community`, `quote`, `signal_type` (complaint,
-  workaround, shopping, competitor), `engagement` (blank when the source returns none),
-  `source_actor`, `source_run_id`.
+  workaround, shopping, competitor, review, feature_request), `engagement` (score, likes or
+  thumbs-up as the source reports it; blank when it returns none), `source_actor`,
+  `source_run_id`.
+- `search-demand.csv`: `phrase`, `monthly_volume`, `median_month`, `country`, `cpc`,
+  `competition`, `kind` (`volume`, `related_query` or `people_also_ask`), `source_actor`,
+  `source_run_id`. Header only when step 4 was skipped.
 
 Close with the number of quotes, the top community, a link to the runs in Apify Console, and the
 next step: the verbatim phrasing feeds cold email, landing copy and positioning. Before naming
@@ -167,7 +214,11 @@ another skill, check that it is installed. Offer a monthly rerun to watch the la
 - **Lots of results, none from the buyer.** The vocabulary drifted into category words. Rewrite the
   phrases as complaints. The most common failure.
 - **Reddit returns noise or almost nothing.** You searched site-wide. Find the subreddits first,
-  then search inside them (step 5). For a slow niche, widen `t=year` to `t=all`.
+  then search inside them (step 6). For a slow niche, widen `t=year` to `t=all`.
+- **LinkedIn returns vendors.** Use search to find posts, keep comments whose headline is the
+  buyer, and move vendors to the competitor list.
+- **Every keyword volume is 10.** The phrases are too long or too niche to measure. Volume the
+  category name and the shopping phrases instead.
 - **X returns bots and promotions.** Add `minimumFavorites: 2`. Engagement filters cut promotional
   noise faster than keywords.
 - **Quotes are all from vendors and consultants.** You found the supply side. Exclude vendor domains
