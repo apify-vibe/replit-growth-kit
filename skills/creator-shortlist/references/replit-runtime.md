@@ -83,7 +83,8 @@ builder can stop the job at any point. Confirmations that cost nothing (the prod
 competitor shortlist, the angles to cover) are ordinary questions, not spend forms.
 
 **Caps on every run.** Set the API run option `maxTotalChargeUsd` to **at least $0.50**, or twice
-the run's estimated cost when that is higher; it is a ceiling, not a charge. Lower caps make runs
+the run's estimated cost when that is higher, but never more than what remains of the approved
+budget; it is a ceiling, not a charge. Lower caps make runs
 fail or stop early: several Actors refuse a run whose cap is below their own minimum, and a run
 that hits its cap mid-way stops with partial data. Bound the work itself with `maxItems` and the
 Actor's own result or page caps, because several Actors default those to 1,000 or more and a few
