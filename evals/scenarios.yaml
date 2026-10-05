@@ -92,3 +92,18 @@ cases:
     fit: bad
     request: "Find influencers to promote LedgerGuard."
     expect: "Stops before any paid run: enterprise procurement purchase, not UGC. Points to outbound skills."
+
+  # v2 lead-engine lanes (added 2026-10-04)
+  - id: lead-good-linkedin-title
+    skill: open-web-lead-engine
+    fixture: ledgerguard
+    fit: good
+    request: "Find CTOs and heads of engineering at 50 to 200 person SaaS companies in Germany that sell to enterprises. I need their LinkedIn and a work email."
+    anchors: "harvestapi/linkedin-profile-search 6.5K MCP users, harvestapi/linkedin-company-employees 3.5K, 'linkedin email' 1,097"
+
+  - id: lead-good-domains
+    skill: open-web-lead-engine
+    fixture: briefcraft-waitlist
+    fit: good
+    request: "Here are the domains from my waitlist (waitlist.csv). Pull the founder or owner contact from each website and verify the emails."
+    anchors: "vdrmota/contact-info-scraper 2.0K, 'email finder' 920, 'email verifier' 484, 'website email' 280"
