@@ -29,12 +29,14 @@ Keyword form, inside one subreddit:
 | `dateFrom` / `dateTo` | Hard date window |
 
 Output: `kind` (post or comment), `title`, `body`, `score`, `num_comments`, `created_utc` (ISO),
-`depth`, `parentId`, `subreddit`, `upvote_ratio`.
+`depth`, `parentId`, `postId`, `postUrl`, `subreddit`, `subreddit_subscribers` (real member
+counts), `upvote_ratio`.
 
 ### Reddit backup: `trudax/reddit-scraper-lite`
 
-Use only when the primary is unavailable. It fails outright when `maxItems` is under 10, returned 0
-items on SUCCEEDED runs in earlier testing, and returns no score or comment depth.
+Use when the primary is unavailable, or once when a primary run reports SUCCEEDED with 0 items (a
+silent block). It fails outright when `maxItems` is under 10, has also returned 0 items on
+SUCCEEDED runs, and returns no score or comment depth.
 `{"startUrls":[{"url":"..."}],"maxItems":30,"maxPostCount":10,"maxComments":5,"skipUserPosts":true,"skipCommunity":true,"includeNSFW":false}`
 
 ## X: `apidojo/tweet-scraper`
@@ -53,16 +55,20 @@ items on SUCCEEDED runs in earlier testing, and returns no score or comment dept
 | `twitterHandles` | array | Watch specific accounts instead of searching |
 
 Supply either `searchTerms` or `twitterHandles`, not both, or you pay for two jobs in one run.
+`maxItems` caps the whole run, not each term. Set `includeSearchTerms: true` to see which phrase
+found each post. A phrase that matches nothing returns a billed `{"noResults": true}` row. `Latest`
+without `start` reaches back years for rare phrases; set `start` 90 days back for warm threads.
 
 ## YouTube: `streamers/youtube-scraper`
 
-Comments under tutorials about the workaround are dense with complaints. Search the workaround, not
-your product category.
+Finds the complaint-shaped videos whose comments the next Actor reads. Comments under tutorials
+are mostly thanks; search for videos about quitting, switching or reviewing the workaround or a
+competitor.
 
 | Field | Type | Use |
 |---|---|---|
-| `searchQueries` | array | Workaround phrases, for example `"excel staff rota template"` |
-| `maxResults` | integer | Default cap 20 |
+| `searchQueries` | array | Complaint-shaped phrases, for example `"why I stopped using 7shifts"` |
+| `maxResults` | integer | Per search query (4 queries × 6 = 24 videos). The live default is 0: always set it. |
 | `sortingOrder` | enum | `relevance`, `rating`, `date`, `views` |
 | `dateFilter` | enum | `hour`, `today`, `week`, `month`, `year` |
 | `lengthFilter` | enum | `under4`, `between420`, `plus20`. Tutorials run long. |
@@ -78,16 +84,25 @@ URLs found with `streamers/youtube-scraper`.
 |---|---|---|
 | `startUrls` | array | Required. `[{"url": "https://www.youtube.com/watch?v=..."}]`, the top 5 to 10 workaround videos |
 | `maxComments` | integer | **Defaults to 1.** Set it (50 per video). |
-| `sortCommentsBy` | enum | `TOP_COMMENTS` for phrasing, `NEWEST_FIRST` for warm threads |
+| `sortCommentsBy` | enum | `TOP_COMMENTS` for phrasing, `NEWEST_FIRST` for warm threads. Top comments on viral videos are jokes. |
 | `oldestCommentDate` | string | Recency floor |
+
+`maxComments` counts replies too (77 of 197 rows were replies in testing). Output: `comment`
+(text), `publishedTimeText` (relative), `voteCount`, `replyCount`, `type` (comment or reply), `cid`,
+`videoId`. There is no per-comment URL: build `https://www.youtube.com/watch?v=<videoId>&lc=<cid>`.
 
 ## Hacker News: `ryanclinton/hackernews-search`
 
 For developer and technical audiences. Tested 2026-10-04 (100% success, $0.005 per story).
 
 ```json
-{"query":"spreadsheet invoicing","maxResults":30,"searchType":"date"}
+{"query":"uptime monitoring","maxResults":30,"tags":"comment","dateFrom":"2026-01-01"}
 ```
+
+Comment search (`tags: comment`) was the productive mode for developer pain; story search by date
+returns many rows with `title: null` (comments typed as results) and "who wants to be hired" posts.
+`expandThreads` with `threadMaxComments` fetches whole threads. `points` is null for comments, so
+HN comments carry no engagement. Check the live schema for these field names before use.
 
 ## Interest over time (optional): `apify/google-trends-scraper`
 
@@ -109,16 +124,18 @@ group pages that rank.
 | `countryCode` / `languageCode` | enum | Geographic and language targeting |
 | `websiteContentScraper` | object | `{"enable": true}` pulls the page body in the same run, useful for forum threads |
 
-Use it once cheaply in step 3 as the probe, then again in step 6 with the full phrase set.
+Use it once cheaply in step 3 as the probe, again in step 5 to find subreddits and LinkedIn posts,
+and in step 6 for the search lane.
 
 ## Search demand: how many people look for this
 
 Tested 2026-10-05.
 
 **Questions and phrasing, `apify/google-search-scraper`** (already used for the probe):
-`relatedQueries` (`[{title, url}]`) came back on every query; `peopleAlsoAsk`
-(`[{question, answer, ...}]`) was empty on some queries and `answer` was always null, so keep the
-question text only. `searchQuery` is an object; read `searchQuery.term`.
+`relatedQueries` (`[{title, url}]`) and `peopleAlsoAsk` (`[{question, answer, ...}]`) are both
+empty on some queries; related queries often repeat each title twice and can be templated
+autocompletions ("download", "apk"). `answer` was always null, so keep the question text only.
+`searchQuery` is an object; read `searchQuery.term`. `organicResults[].date` is usually null.
 
 **Monthly volume, `aitorsm/keyword-volume`** (675 users, 99.9% success, $0.008 per keyword at the
 top tier, $0.012 on FREE):
@@ -127,10 +144,12 @@ top tier, $0.012 on FREE):
 {"keywords":["staff scheduling app","rota spreadsheet"],"geo":"United States","language":"English"}
 ```
 
-`geo` and `language` take names, not codes. Output from Google Ads Keyword Planner:
-`search_volume` (monthly average, bucketed), `monthly_searches` (12 months), `cpc`,
-`competition`. Volumes under about 10 come back as 10 with a null CPC, so "10" means "too low to
-measure". The 12-month series can spike (60,500 one month against 2,400 to 9,900 otherwise):
+`geo` and `language` accept names or codes. Output from Google Ads Keyword Planner:
+`search_volume` (monthly average, bucketed), `monthly_searches` (an array of
+`{year, month, monthly_searches}` objects), `cpc` (an advertiser bid estimate, not an average
+cost), `competition`. Volumes under about 10 come back as 10 with a null CPC, and some phrases
+come back with every field null and are still billed: both mean "not measured". Apostrophes are
+stripped ("doesn't" becomes "doesn t") and break the phrase; rephrase without them. The 12-month series can spike (60,500 one month against 2,400 to 9,900 otherwise):
 report the median month, not only the headline. `aiVolume: true` bills a second event; leave it
 off. Avoid `steadyfetch/keyword-search-volume-scraper` for small batches ($0.19 per run), and
 `khadinakbar/dataforseo-keyword-research` returns neighbouring keywords, not the seed.
@@ -149,9 +168,11 @@ phrase; this route was not live-tested, so the pilot decides), then read their c
 {"posts":["https://www.linkedin.com/posts/..."],"maxItems":50,"scrapeReplies":true,"profileScraperMode":"short"}
 ```
 
-`maxItems` applies per post. Each comment carries `commentary`, `createdAt` (absolute),
+The input `maxItems` applies per post; set the run option `maxItems` to posts × that, or it
+truncates. Replies are not billed. Each comment carries `commentary`, `createdAt` (absolute),
 `actor.name`, `actor.position` (headline: separates practitioners from vendors, about 8 of 10 in a
-sample) and `replies[]` one level deep. Keep `profileScraperMode: "short"`; other modes bill a
+sample) and, when present, `replies[]` one level deep (the key is missing on comments without
+replies). Keep `profileScraperMode: "short"`; other modes bill a
 profile per comment. The post text itself is not in this output: quote only comments you fetched,
 and treat the search snippet of the post as context, not a quote.
 
@@ -170,7 +191,7 @@ tier, $0.00125 on FREE).
 
 Pick videos with `commentCount` of 10 or more before paying for comments. Comment fields: `text`,
 `createTimeISO` (absolute), `diggCount`, `replyCommentTotal`, `repliesToId` (replies are separate
-rows). `commentsPerPost` includes replies. In testing, 7 of 10 videos from a complaint search were
+rows), `cid`; no per-comment URL, so cite the video URL with the comment's date. `commentsPerPost` includes replies. In testing, 7 of 10 videos from a complaint search were
 app promotions, and comments were real people reacting to the video rather than describing a tool
 problem: use TikTok for the audience's own language, and pick complaint-shaped videos as on YouTube.
 
@@ -180,7 +201,7 @@ Same Actors as the competitor teardown; pull 1 to 2 star reviews from the last 1
 
 | Source | Actor | Low-star input |
 |---|---|---|
-| Capterra | `zen-studio/capterra-reviews-scraper` | `"starRating":["1","2"],"sort":"LOWEST_RATED"` |
+| Capterra | `zen-studio/capterra-reviews-scraper` | `"starRating":["1","2"],"sort":"LOWEST_RATED"`; one product per run, `productUrl` of the form `https://www.capterra.com/p/<id>/<slug>/reviews/` (find it with a search); no date filter |
 | G2 | `automation-lab/g2-scraper` | `"sortReviews":"rating_low"` plus `publishedAfter`; `minRating` is an NPS floor, not stars |
 | App Store | `thewolves/appstore-reviews-scraper` | No rating filter: fetch about 10x and keep `score` 1 to 2 ($0.0001 each) |
 | Google Play | `thewolves/google-play-reviews-scraper` | `sort: "RATING"` returns 5-star first: fetch `NEWEST`, about 10x, keep `score` 1 to 2. Needs the real package name. |
@@ -190,31 +211,28 @@ Same Actors as the competitor teardown; pull 1 to 2 star reviews from the last 1
 No usable Store Actor exists for either (every candidate had 11 users or fewer). Call the public
 APIs through `apify/web-fetch` ($0.001 per fetch, no token):
 
+Across repos, by the problem's own words (the default):
+
 ```json
-{"url":"https://api.github.com/search/issues?q=repo:owner/name+is:issue+is:open&sort=reactions&order=desc&per_page=30","formats":["text"]}
-```
-```json
-{"url":"https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance&q=uptime+monitoring&tagged=monitoring&site=stackoverflow&pagesize=30&filter=withbody","formats":["text"]}
+{"url":"https://api.github.com/search/issues?q=%22false+alerts%22+uptime+in:title,body+is:issue&sort=reactions&order=desc&per_page=30","formats":["text"]}
 ```
 
-The JSON arrives as a string in `text`; parse it. GitHub: `reactions.+1` and `total_count` are the
+One competitor's repo, only when it is open source and competes on the same job:
+`https://api.github.com/search/issues?q=repo:owner/name+is:issue+<problem words>&sort=reactions&order=desc&per_page=30`
+
+```json
+{"url":"https://api.stackexchange.com/2.3/search?order=desc&sort=relevance&intitle=uptime+monitoring&tagged=monitoring&site=stackoverflow&pagesize=30&filter=withbody","formats":["text"]}
+```
+
+Stack Overflow's `q` parameter matches every word in the body (a multi-word `q` plus a tag
+returned 0 results and still billed); `intitle` is the reliable search.
+
+The JSON arrives as a string in `text`; parse it. Bodies arrive as HTML: decode entities before
+quoting. GitHub: `reactions.+1` and `total_count` are the
 demand count (704 thumbs-up on one uptime-tool feature request), plus `labels`, `comments`,
 `created_at`, `html_url`. Search is limited to 10 requests a minute without a token, so fetch one
 after another. A label filter must match the repo's exact label: a wrong one returns 0 results at
 HTTP 200 and still bills. Stack Overflow: anonymous quota 300 requests a day; sort by relevance
 with a tag (sorting by votes returned off-topic questions). Stack Overflow shows implementation
-problems more than missing tools, so it is a weak source on its own; GitHub issues on the
-competitors' or the workaround's repos are the strong one.
-
-## Choosing platforms
-
-Drop platforms before you ask for the gate rather than after.
-
-| Audience | Scan |
-|---|---|
-| B2B operations, finance, HR, agencies | Reddit, LinkedIn comments, incumbent reviews, search |
-| Developers and dev tooling | GitHub issues, Hacker News, Reddit, X; Stack Overflow only for implementation pain |
-| Consumer, under 35 | Reddit, TikTok comments, YouTube comments, app-store reviews |
-| Local services and trades | Search, Facebook groups via search, Reddit |
-| Creator economy | X, YouTube, Instagram adjacency |
-| Regulated or enterprise internal | Run the step 3 probe; it usually stops the scan here. |
+problems more than missing tools, so it is a weak source on its own; GitHub issues found by the
+problem's own words are the strong one.

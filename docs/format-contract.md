@@ -53,9 +53,11 @@ Then six rules:
    credit and Replit's trust. Stop and explain when the motion does not apply.
 3. **Capability is discovered, never assumed.** Resolve Actor IDs and input schemas at runtime
    before building an input. Never invent an Actor name, an output field, a price, or a result.
-4. **Ask for one spend budget per job.** One approval through Replit's `AskQuestion` tool,
-   before the first paid run, listing every step (pilot, scale, follow-ups) with its Actors, item
-   and dollar caps, and the job total. Ask again only to exceed the budget or change the plan.
+4. **Ask for one spend budget per job.** Settle the whole plan first (platforms, lanes, angle
+   groups), then one approval through Replit's `AskQuestion` tool, before the first paid run,
+   listing every step (probe, pilot, scale, follow-ups) with its Actors, item and dollar caps, any
+   condition ("runs only if the probe passes"), and the job total. Ask again only to exceed the
+   budget or change the plan. Mark paid steps "(paid)" in the workflow; do not call them gates.
    Changed 2026-10-04 from one gate per step: in Replit test drives, per-step forms plus the
    connector's own run approvals meant a builder clicked through every run, and cap-failure
    retries re-triggered gates.

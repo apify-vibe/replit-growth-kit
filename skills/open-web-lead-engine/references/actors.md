@@ -40,7 +40,7 @@ Minimum `maxTotalChargeUsd`: $0.50. Cost multiplier: `places × maximumLeadsEnri
 
 Known behaviour: enrichment titles are noisy for small businesses (servers, trainers, bussers
 alongside owners), and enrichment emails at restaurants were mostly catch-all or no-mailbox in
-testing, so the role check in step 6 and the verifier in the waterfall both matter. Large chains
+testing, so the role check in step 7 and the verifier in step 6 both matter. Large chains
 are excluded from enrichment server side. Businesses with no website return an empty
 `leadsEnrichment[]`, which is expected rather than a failure.
 
@@ -90,7 +90,7 @@ About $0.001 per lead on every tier. In testing: title, person country and compa
 |---|---|---|
 | `totalResults` | integer | **Always set.** Defaults to 1,000. |
 | `personTitleIncludes` | array | `["CTO", "Head of Engineering"]` |
-| `includeTitleVariants` | boolean | `true` widens to synonyms; check titles in step 6 |
+| `includeTitleVariants` | boolean | `true` widens to synonyms; check titles in step 7 |
 | `personLocationCountryIncludes` | array | Where the person sits |
 | `companyLocationCountryIncludes` | array | Where the company sits. Set it when the ICP geography is about the company: with person country alone, 2/5 companies were HQ'd elsewhere. |
 | `companyIndustryIncludes` | array | `["Computer Software"]` |
@@ -131,8 +131,9 @@ Output: `firstName`, `lastName`, `linkedinUrl`, `headline`, `location.parsed.cou
 `currentPosition[]` (`position`, `companyName`, `companyLinkedinUrl`), `companyWebsites[]`, and
 `emails[]` with `status` (`valid`, `risky`) and `qualityScore`. Sample: 3/5 valid, 2/5 risky.
 
-Company size is in the full output at `currentPosition[].company.employeeCount`. The company's
-headquarters country is not: when company geography is required, check it with
+Company size is in the full output at `currentPosition[].company.employeeCount`. Use the company
+page's own `website` for domain checks: `companyWebsites[]` holds unrelated domains. The company's
+headquarters country is not in the profile: when company geography is required, check it with
 `harvestapi/linkedin-company` ($0.003 per company, `locations[]`) or send the row to review.
 
 ### Named companies: `harvestapi/linkedin-company-employees`

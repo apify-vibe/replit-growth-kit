@@ -41,10 +41,10 @@ fail while reads work, follow "When run starts fail" in the runtime reference.
 
 ```
 - [ ] 1. Inspect the app and name the category
-- [ ] 2. Find the real competitors and confirm 3 to 5
-- [ ] 3. Pick the research angles that fit this app
-- [ ] 4. Resolve each competitor's identifiers
-- [ ] 5. Collect, one gate per angle group
+- [ ] 2. Pick the research angles and ask for the budget
+- [ ] 3. Find the real competitors and confirm 3 to 5 (paid)
+- [ ] 4. Resolve each competitor's identifiers (paid)
+- [ ] 5. Collect each angle group (paid)
 - [ ] 6. Analyse: pricing, wedge, battlecards
 - [ ] 7. Deliver the teardown
 ```
@@ -55,32 +55,16 @@ Read the workspace: README, landing copy, routes, models, pricing page. Write do
 product does, who pays, the price point, and the two or three capabilities that would appear on a
 comparison page. Name the category in the words a buyer would search.
 
-Classify the app, because it decides which angles matter in step 3: **B2B software**, **consumer
+Classify the app, because it decides which angles matter in step 2: **B2B software**, **consumer
 or mobile app**, **local business**, or **developer tool**.
 
 Show the summary to the builder and let them correct it once. Ask which competitors they already
 know about. Their answer is a seed, not the answer.
 
-If the app has no comparable paid alternatives, say so and stop: a teardown of an empty category
-would mislead.
+### 2. Pick the research angles and ask for the budget
 
-### 2. Find the real competitors and confirm 3 to 5
-
-Founders name the well-funded competitor and miss the cheap one taking their customers. Search
-before trusting the seed list. Run one gated `apify/google-search-scraper` step with three query
-shapes:
-
-- `best <category> software` and `<category> app` (who ranks)
-- `<seed> alternatives` for each seed (who gets compared)
-- `<seed> vs` for each seed (comparison pages name competitors accurately)
-
-Drop directories, listicles and marketplaces. Show 8 to 12 candidates with one line each and ask
-the builder to keep 3 to 5. More than five makes a table nobody reads and a bill nobody wanted.
-
-### 3. Pick the research angles that fit this app
-
-There are seven angle groups. Recommend a set based on the app type from step 1, show it with a
-cost ceiling, and let the builder add or drop groups before any collection.
+There are seven angle groups. Recommend a set based on the app type from step 1, show it, and let
+the builder add or drop groups (a free question).
 
 | Group | What it answers | B2B software | Consumer / mobile | Local business | Dev tool |
 |---|---|:-:|:-:|:-:|:-:|
@@ -97,13 +81,34 @@ The Actor for each source, its minimal input and its traps are in
 beat seven done thinly. TikTok's ad library only covers EU and UK advertisers, so skip it for a
 US-only competitor.
 
-### 4. Resolve each competitor's identifiers
+Then ask for the job's budget in one form (runtime reference, section 3): the competitor search
+(step 3), identifier resolution (step 4), and each chosen angle group (step 5) priced per
+competitor for up to 5 competitors, with the default caps below. The competitor shortlist itself is
+a free question inside the plan; a sixth competitor or a new angle group is a plan change.
+
+### 3. Find the real competitors and confirm 3 to 5 (paid)
+
+Founders name the well-funded competitor and miss the cheap one taking their customers. Search
+before trusting the seed list. Run one `apify/google-search-scraper` step with three query
+shapes:
+
+- `best <category> software` and `<category> app` (who ranks)
+- `<seed> alternatives` for each seed (who gets compared)
+- `<seed> vs` for each seed (comparison pages name competitors accurately)
+
+Drop directories, listicles and marketplaces. Show 8 to 12 candidates with one line each and ask
+the builder to keep 3 to 5. More than five makes a table nobody reads and a bill nobody wanted.
+
+If the search finds no comparable paid alternatives, say so and stop: a teardown of an empty
+category would mislead. Decide this from the search results, not from memory.
+
+### 4. Resolve each competitor's identifiers (paid)
 
 Most review, ads and company Actors need an ID the builder will not know: a G2 slug, a Capterra
 numeric ID, a Trustpilot domain, an App Store ID or Play package, a Glassdoor `E<id>`, a LinkedIn
 company slug, an ATS board slug, a Facebook page.
 
-Resolve them in one gated step with `apify/google-search-scraper`, using one `site:` query per
+Resolve them in one step with `apify/google-search-scraper`, using one `site:` query per
 competitor and source (for example `site:g2.com/products notion reviews`, `site:glassdoor.com/Reviews
 calendly`). Take the first URL that matches the competitor's own domain or name.
 
@@ -112,10 +117,9 @@ Take social profiles (Facebook, Instagram, LinkedIn, X, YouTube) from the links 
 where it came from in an identifier table. An identifier you could not resolve is a skipped source,
 not a guess.
 
-### 5. Collect, one gate per angle group
+### 5. Collect each angle group (paid)
 
-Run each chosen group as one gated step (see the runtime reference): list every run in the group
-with its Actor, competitor, input in one line, item cap and dollar cap, plus the group total.
+Run the angle groups in the budget, reporting each group's runs and spend in chat as it finishes.
 Default caps per competitor:
 
 | Group | Default cap |
@@ -138,7 +142,8 @@ Collection notes that matter:
   the proxy country to the builder's market. Run crawls one after another. A third-party price is
   secondary evidence, labelled as such, never a substitute for an official one.
 - **Reviews and complaints:** pull the newest reviews and a separate low-star slice. The low-star
-  slice is where the wedge lives; the newest slice keeps it honest. Keep the low-star slice recent
+  slice is where the wedge lives; the newest slice keeps it honest. A recent low-star review sits
+  in both slices: deduplicate on review ID before counting themes. Keep the low-star slice recent
   with a date floor (the last 18 months): sorted by rating alone, most of it is years old. Theme
   complaints from the review text itself; provider "theme" fields are often empty.
 - **Complaints in the wild:** pilot first (10 to 20 rows). Brand names collide ("Notion", "Linear"),
@@ -146,9 +151,10 @@ Collection notes that matter:
 - **Ads:** collect only from the verified advertiser identity from step 4: the Facebook page
   linked from their site for Meta, and their **domain** (never the brand name) for Google, then
   check the returned advertiser name matches. A name search returned a different company in
-  testing. The same applies to LinkedIn ads and LinkedIn jobs: use the company page URL or ID from
-  step 4, never the brand name ("Vanta" also returned Vantage and Vantaca), and drop rows whose
-  company name does not match. Currently active ads show what they are paying to say now.
+  testing. LinkedIn jobs take the company ID from step 4 (`companyId`); TikTok ads take the exact
+  advertiser name plus `advertiserBizId` when the library URL shows it. The LinkedIn ad library
+  takes names only. Wherever a name is the input, a brand name returns namesakes ("Vanta" also
+  returned Vantage and Vantaca): drop rows whose company or advertiser name does not match. Currently active ads show what they are paying to say now.
 - **Hiring:** count open roles by department and team. Ten new sales roles and no engineering roles
   is a strategy statement.
 
@@ -190,6 +196,8 @@ Write to the workspace root, even if some angles were skipped or failed:
 - `competitor-signals.csv`: everything else as one fact per row: `competitor`, `angle` (ads,
   hiring, traffic, seo, funding, headcount, tech_stack, launch, social, news), `metric`, `value`,
   `observed_at`, `url`, `actor`, `source_run_id`.
+- `growth-kit-approvals.jsonl`: written once a budget form was shown (runtime reference,
+  section 3).
 
 Close with: competitors covered, angles covered and skipped, the single strongest wedge in one
 sentence, a link to the runs in Apify Console, and the next step. Before naming a pricing or
@@ -200,14 +208,14 @@ pricing pages and ads change quietly.
 
 - **A review Actor returns nothing.** Usually a wrong identifier. Check the URL from step 4 opens
   the right product page. A product with no reviews on that site is a finding; record it.
-- **Pricing grid comes back empty.** Raise `dynamicContentWaitSecs` in a new gate. If it stays
+- **Pricing grid comes back empty.** Raise `dynamicContentWaitSecs` and rerun (a changed input inside the budget). If it stays
   empty the price sits behind a toggle, a calculator or a demo form: record the URL as "needs a
   human look".
 - **Ad library returns nothing.** For a successful run on a verified page this means "no active
   ads observed in this library", not "they don't advertise". B2B tools often run only Google and
   LinkedIn.
 - **Complaints are about a different product with the same name.** Add the category word to the
-  query and rerun in a new gate.
+  query and rerun once (the pilot rewrite).
 - **Run returns far more items than the cap.** Some Actors ignore the platform `maxItems`
   (see `actors.md`); `maxTotalChargeUsd` still bounds the spend. Set the Actor's own limit field.
 - **`401` or `403`.** Follow the runtime reference; do not assume a missing token.
