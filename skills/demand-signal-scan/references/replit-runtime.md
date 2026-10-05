@@ -1,12 +1,25 @@
 # Replit runtime
 
-Read this before the workflow. It covers how to reach Apify from a Replit workspace, how to gate
-spend, and the evidence rules every Growth Kit skill shares. Where an example in `SKILL.md` or
+Read this before the workflow. It covers how to reach Apify from a Replit workspace, how to
+budget spend, and the evidence rules every Growth Kit skill shares. Where an example in `SKILL.md` or
 `actors.md` disagrees with the live Actor schema, the live schema wins.
 
 ## 1. Connect to Apify
 
-Use the workspace's Apify connection (Replit's `integrations` skill shows it) and call Apify
+**If the Apify MCP server is connected, use it**, even when the workspace also has another Apify
+connection. It is the path that starts runs reliably from Replit. Map the steps below onto its tools:
+
+| Step | MCP tool |
+|---|---|
+| Schema, pricing, stats | `fetch-actor-details` (`output: {inputSchema, pricing, stats}`) |
+| Start a run | `call-actor` with `actor`, `input`, and `callOptions: {maxTotalChargeUsd, maxItems}`; `waitSecs: 0` for anything slower than a few seconds |
+| Poll a run | `get-actor-run` with `waitSecs` up to 45, repeated until a terminal status |
+| Read results | `get-dataset-items` with `datasetId`, `limit`, `fields` |
+
+Runs started through MCP are counted by their origin, so no User-Agent is needed there. Use the
+exact Actor IDs from `actors.md`; `search-actors` is only for an Actor that is unavailable.
+
+Without MCP, use the workspace's Apify connection (Replit's `integrations` skill shows it) and call Apify
 through whatever interface that connection documents, following its own rules for paths, bodies
 and headers. Those interfaces change between Replit versions (`proxyFetch`, `connectorFetch`,
 client libraries), so this skill does not prescribe them. Never read, print or ask for a token.
@@ -49,46 +62,58 @@ If either is unreadable, quote the FREE price and say it is a ceiling.
 Substitute another Actor only when the named one is unavailable or cannot return the needed rows.
 Show the builder why, and compare output, price and recent reliability before gating it.
 
-## 3. Gate spend: one gate per step
+## 3. Spend: one budget per job
 
-Each workflow step that launches Actors gets **one** approval through the `AskQuestion` tool, not
-a plain chat question. The gate lists every run in that step:
+Ask for spend **once per job**, through the `AskQuestion` tool, after the plan is settled and before
+the first paid run. The form lists the whole plan:
 
-| Shown per run | Shown for the step |
+| Shown per step | Shown for the job |
 |---|---|
-| Actor, the input in one line, expected items, per-run cap | total expected items, total cost ceiling |
+| Actors, the input in one line, expected items, cost ceiling (pilot and scale listed separately) | total expected items, **total budget** |
 
-Confirmations that cost nothing (the product summary, the competitor shortlist, the angles to
-cover) are ordinary questions, not spend gates.
+Every "(gated)" step in `SKILL.md` runs under that budget without a new form. Ask again only when:
+- the next step would push spend past the approved budget, or
+- the plan changes: an Actor, platform, country or add-on that was not in the form, or a scale
+  more than twice what the form showed.
 
-Cap every run with the API run options `maxItems` and `maxTotalChargeUsd` (the latter applies to
-every pricing model), plus the Actor's own result or page caps, because several Actors default
-those to 1,000 or more, and a few ignore `maxItems`. Some Actors reject a `maxTotalChargeUsd`
-below their own minimum (observed: $0.25 to $0.50). Use that minimum: it is a ceiling, not a
-charge. A `FREE` Actor still costs platform usage, so it appears in the gate too.
+Where `SKILL.md` says "gate", "gated" or "a new gate", read it as a line in this budget: it needs a
+new form only under those two conditions. A pilot rewrite, a scale-up after a passing pilot, and a cap retry (below) are inside the plan; they
+need no new form while the budget holds. Report each step's runs and spend in chat as you go, so the
+builder can stop the job at any point. Confirmations that cost nothing (the product summary, the
+competitor shortlist, the angles to cover) are ordinary questions, not spend forms.
+
+**Caps on every run.** Set the API run option `maxTotalChargeUsd` to **at least $0.50**, or twice
+the run's estimated cost when that is higher; it is a ceiling, not a charge. Lower caps make runs
+fail or stop early: several Actors refuse a run whose cap is below their own minimum, and a run
+that hits its cap mid-way stops with partial data. Bound the work itself with `maxItems` and the
+Actor's own result or page caps, because several Actors default those to 1,000 or more and a few
+ignore `maxItems`. A `FREE` Actor still costs platform usage, so it counts against the budget.
+
+**Cap retry.** If a run is refused for its cap (`max-total-charge-usd-below-minimum`) or stops on
+its charge limit, retry it once with the same input and the cap the error names (or double the
+old one). That is not a new plan, so no new form, as long as the budget holds.
 
 Running the step:
-- Launch each run, then poll `GET /v2/actor-runs/<id>` until it reaches a terminal status
-  (`SUCCEEDED`, `FAILED`, `TIMED-OUT`, `ABORTED`). `waitForFinish` can return while a run is still
-  `READY` or `RUNNING`; that is not a result.
+- Launch each run, then poll the run until it reaches a terminal status (`SUCCEEDED`, `FAILED`,
+  `TIMED-OUT`, `ABORTED`). A wait that returns while the run is still `READY` or `RUNNING` is not a
+  result.
 - If a launch call errors, list the Actor's runs from the last few minutes before trying again.
   The first launch may have started; reuse it instead of paying twice.
 - Run browser crawls and Reddit jobs one after another, not all at once. Parallel crawls can
   exhaust the account's memory (HTTP 402) and parallel Reddit jobs get rate limited.
 - Re-read a finished run a few seconds later before reporting cost; counters lag.
 
-Rules that make the gate mean something:
-- Send exactly the runs you showed. A changed input, a raised cap, a retry, an extra platform or
-  a second pass is a new gate.
+Rules that make the budget mean something:
+- Run only what the approved plan covers. Anything outside it is a new form.
 - A cancelled, declined or unanswered form is not approval. Never answer for the builder.
-- Append each gate, answer and resulting run IDs to `growth-kit-approvals.jsonl` in the
-  workspace root.
-- If a run was launched outside its gate, abort it, keep what it returned, and report it.
+- Append the budget form, its answer, and each step's run IDs and spend to
+  `growth-kit-approvals.jsonl` in the workspace root.
+- If a run was launched outside the plan, abort it, keep what it returned, and report it.
 
 ## 4. Pilot uncertain lanes
 
 When a search might return off-target rows (keyword discovery, new communities, a new country),
-run a 10 to 20 item pilot first, inside its own gate. Before it runs, write down what counts as
+run a 10 to 20 item pilot first, as its own line in the budget. Before it runs, write down what counts as
 relevant. Then count:
 
 - **Unit:** count threads, companies or creators, not raw rows. A Reddit post with its replies is
@@ -96,11 +121,12 @@ relevant. Then count:
   listicles never count as companies.
 - **Bar:** 50% relevant for searches and directories; 30% for conversational platforms (Reddit,
   X, YouTube comments), where off-topic replies are normal.
-- **Below the bar:** rewrite the query once (new gate) using what the pilot showed. Below the bar
+- **Below the bar:** rewrite the query once using what the pilot showed. Below the bar
   twice: stop that lane and report the pilot; do not scale it. A failed lane is a collection
   failure, not proof that nobody cares.
 
-Scaling a good pilot is a new gate.
+Scale a good pilot only as far as the approved budget covers.
+
 ## 5. Evidence rules
 
 - Every output row carries its source URL (or handle), Actor ID and run ID. Take timestamps and
