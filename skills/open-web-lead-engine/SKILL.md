@@ -15,7 +15,7 @@ Build a first outbound list for the app in this workspace. You end with a scored
 can review and runs they can open in Apify Console. You do not end with a sent email.
 
 **Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
-Apify, the one-budget-per-job rule and the $0.50 run-cap floor, pilots and evidence rules. Actor
+Apify, the one-budget-per-job rule and run caps, pilots and evidence rules. Actor
 inputs, prices and traps are in [references/actors.md](references/actors.md).
 
 ## When to use something else
@@ -43,7 +43,7 @@ Actor is unavailable, as the runtime reference describes.
 | Lane D, people by title: LinkedIn | `harvestapi/linkedin-profile-search` |
 | Lane D, people at named companies | `harvestapi/linkedin-company-employees` |
 | Lane D, company HQ check | `harvestapi/linkedin-company` |
-| Gaps: owner or manager name | `apify/ai-web-scraper` |
+| Gaps: owner or manager name | `apify/website-content-crawler` (fallback `apify/ai-web-scraper`) |
 | Gaps: email finder | `scalelist/email-finder` |
 | Gaps: email verifier | `bounceverify/bounceverify-email-verifier` |
 
@@ -153,33 +153,46 @@ estimate overshot about 2.5x. Default caps on paid tiers: 50 places per search, 
 company, Instagram and Facebook only; on FREE, see step 3.
 
 Settings that carry the quality of the list:
-- Lane A: `skipClosedPlaces: true`; `website: "withWebsite"` for email lists;
-  `verifyLeadsEnrichmentEmails: true`; `maximumLeadsEnrichmentRecords` above zero (zero switches
-  enrichment off). Leave `leadsEnrichmentDepartments` empty for local businesses and filter by role
-  in step 7: in testing, `["c_suite", "operations"]` cut leads from 10 per 100 places to 3 per 162,
-  mostly parent-company executives.
+- Lane A, in two runs: first search with person enrichment off, drop chains (step 7's rule) and
+  places outside the geography, then enrich only the places left by passing their `placeIds`
+  (re-reading a place costs a fraction of a cent; each enriched person about $0.003). Enrichment does
+  **not** skip chains on Apify's side: in testing, 37% of enriched people were chain executives.
+- Lane A settings: `skipClosedPlaces: true`; `website: "withWebsite"` for email lists;
+  `verifyLeadsEnrichmentEmails: true`; always set `maximumLeadsEnrichmentRecords` (its live default
+  is 0, which switches enrichment off). Leave `leadsEnrichmentDepartments` empty for local
+  businesses and filter by role in step 7: in testing, `["c_suite", "operations"]` cut leads from
+  10 per 100 places to 3 per 162, mostly parent-company executives. Social profiles bill per
+  profile found, not per network enabled.
+- Large cities: search district by district (London returned only outer south-east boroughs for
+  "London, United Kingdom"). To scale past the pilot, use new districts or search terms and drop
+  places already bought by `placeId`; overlaps are billed again.
 - Lane D database: always set `totalResults` (it defaults to 1,000), and set the company-country
   filter when the ICP geography is about the company rather than the person.
 - Lane D LinkedIn: `profileScraperMode: "Full + email search"`; `locations` in plain text
-  (`"United Kingdom"`, never `"UK"`). `industryIds` filters the person's industry, not the
-  company's, so check the company's industry on the row.
+  (`"United Kingdom"`, never `"UK"`); `companyHeadcount` letters per `actors.md` (D is 51-200);
+  `companyHeadquarterLocations` for company geography. `industryIds` filters the person's
+  industry, not the company's, so check the company's industry on the row.
 - Maps searches drift into neighbouring towns: check each place's address against the ICP
   geography in step 7.
 
 ### 6. Fill the gaps and verify emails (paid)
 
 First sort provisionally with step 7's rules. A row is **one field short** when it would be a lead
-but for a missing named person or a missing email. Those rows get one pass each, in this order:
+but for a missing named person or a missing email; on lane B, where the crawl returns contacts
+only, a missing business type counts with the missing name. Those rows get one pass each, in this
+order:
 
-1. **No named person, has a website**: run `apify/ai-web-scraper` with the prompt and run settings
-   in `actors.md`. It bills about $0.02 per page it reads, so budget $0.04 to $0.10 per site, and it
-   is slow: batches of up to 25 sites with a one-hour run timeout. It pays off for agencies, studios
-   and other firms with a team page (measured: names for most of 25 agency sites); for restaurants
-   and shops it rarely does (1 usable name from 53 restaurant sites, $0.24), so offer it there only
-   when the builder wants every possible lead. Keep a name only with its cited URL, and only when
-   that page says the person currently holds the role at this business; clients, case-study
-   subjects and past founders go to excluded. Spot-check 3 hits per batch by fetching the cited
-   page.
+1. **No named person, has a website**: crawl each site's About, Team, People and Contact pages
+   with `apify/website-content-crawler` (inputs in `actors.md`; about $0.0004 per page, so cents for
+   a whole batch), then read those pages yourself for the people who own, founded or run this
+   business, or hold the ICP's buyer title. A smoke test on 6 agency sites reached the team or about
+   page on 5 for $0.003. Keep a name only with the URL of the page that states it, and only when
+   that page says the person currently holds the role at this business: testimonials, clients,
+   case-study subjects and past founders go to excluded. On lane B, read the business type from
+   the home page in the same pass. When a site hides its team page behind scripts or the crawl
+   finds nothing, `apify/ai-web-scraper` is the paid fallback ($0.04 to $0.10 per site; offer it
+   for the sites that matter, not the whole list). For restaurants and shops, owners are rarely
+   named on their sites: say so before running this step.
 2. **Named buyer and company domain, no personal email**: `scalelist/email-finder`. A business
    inbox (`info@`) stays as the fallback if the finder misses. The finder bills lookups that find
    nothing; on small businesses expect about 5 lookups per email found. Accept a found email only
@@ -207,10 +220,11 @@ Every sourced row lands in exactly one file, with a reason. Nothing is silently 
    row then sorts on what remains.
 2. **Review.** A required criterion is unknown, or no identifiable person was returned. A company
    name is not a person: a lead needs a first and last name from the row. Contacts that may belong
-   to a different company also go here. On LinkedIn rows, read size from
-   `currentPosition[].company.employeeCount`. Company headquarters are not in the profile: when
-   company geography is required, check it with `harvestapi/linkedin-company` inside the budget,
-   or the row lands here.
+   to a different company also go here. On LinkedIn rows, read size from the company's declared
+   bucket, `currentPosition[].company.employeeCountRange` (`employeeCount` counts LinkedIn members
+   and disagreed on 15 of 59 rows in testing). For company geography, prefer the search's
+   `companyHeadquarterLocations` filter; check with `harvestapi/linkedin-company` only when the
+   search did not use it, or the row lands here.
 3. **Lead.** Every required criterion supported, a named decision-maker (owner, co-owner,
    founder, CEO, managing partner, general manager, managing director, or the ICP's buyer title;
    assistant and deputy managers are not decision-makers), and an email no

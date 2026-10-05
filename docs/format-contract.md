@@ -102,8 +102,9 @@ On 2026-09-07 Jakub could not tell Replit runs apart from any other traffic: the
 
 Run options `maxItems` and `maxTotalChargeUsd` go on every run; the latter bounds spend for every
 pricing model, and several Actors ignore `maxItems` or default their own limits to 1,000+.
-`maxTotalChargeUsd` is never below $0.50 (or twice the estimated cost when higher): several Actors
-refuse lower caps, and a run that hits its cap stops with partial data.
+`maxTotalChargeUsd` is twice the estimated cost and never below the Actor's own minimum ($0.50 when
+unknown): several Actors refuse lower caps, and a run that hits its cap stops with partial data.
+Usage-billed Actors ignore it; bound those with pages, memory and timeout.
 
 
 Every Actor these skills route to is pay-per-event, and the key is shared. So:

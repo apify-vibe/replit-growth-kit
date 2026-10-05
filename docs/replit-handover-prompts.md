@@ -6,7 +6,7 @@ request is part of the test. Each prompt describes its app, so it also works in 
 
 ## Before you start
 
-1. Install skills version 1.3 into `.agents/skills/` (zip `apify-growth-kit-skills-v1.3.zip`, or
+1. Install skills version 1.4 into `.agents/skills/` (zip `apify-growth-kit-skills-v1.4.zip`, or
    the bundle at `https://api.apify.com/v2/key-value-stores/wg0mG9VcKHRQ9d3Py/records/skills.tgz`).
    Remove any older workspace-level copies in Workspace Settings → Skills, or Agent may load those.
 2. Connect the Apify MCP server. The skills use it first; Replit's native Apify connector fails on
@@ -85,16 +85,18 @@ named incumbents, verbatim quotes with links, and ranked communities.
 > pain? Check what HR managers say on LinkedIn and in low-star reviews of BambooHR and Gusto, and
 > how many people search for onboarding software.
 
-*Expect:* LinkedIn comments from HR practitioners (vendors filtered out by headline), low-star
-review quotes, search volume, and an honest note on what the volume does and does not show.
+*Expect:* LinkedIn comments run because they were asked for (vendors filtered out by headline,
+with a warning that they are usually thin), low-star review quotes, search volume, and a fallback
+source offered if the named ones fail.
 
 **3. Developer pain.**
 > I'm building an uptime monitor for indie developers, $12 a month. What do developers complain
 > about with existing monitoring tools? Look at GitHub issues, Hacker News and Stack Overflow, and
 > find recent threads where a helpful reply would be welcome.
 
-*Expect:* GitHub issues ranked by thumbs-up, Hacker News comments, verbatim quotes, and warm threads
-from the last 90 days. Weak sources get reported as weak rather than padded.
+*Expect:* Hacker News comments, verbatim quotes, warm threads from the last 90 days, and GitHub
+issues run because they were asked for (the skill warns they are usually thin). Weak sources get
+reported as weak rather than padded.
 
 ## Competitor Teardown
 

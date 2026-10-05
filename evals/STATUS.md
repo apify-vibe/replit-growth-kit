@@ -187,6 +187,24 @@ v2 spend: survey $0.66 + evals $11.67 = **about $12.30**.
   `docs/replit-handover-prompts.md`.
 - **v1.3 bundle:** staged in KV `wg0mG9VcKHRQ9d3Py`; zip and per-skill folders on the Desktop.
 
+## v1.4 (2026-10-05): round v13 fixes shipped
+
+- **Round v13:** all 19 cases after the review fix pass. 18 of 19 passed the mechanical gates, for
+  $21.34; `demand-bad-private` failed G2, which led to the amendment below. Details in
+  `evals/runs/2026-10-05-v13/FIXES.md`.
+- **Decisions D1 to D4,** shipped on Claude's recommendations, Lukas to confirm:
+  - Run caps follow the Actor's own minimum ($0.50 when unknown), and the in-flight check uses
+    estimated cost.
+  - Owner names come from a cheap About/Team page crawl that the agent reads itself, with
+    `ai-web-scraper` as the paid fallback.
+  - G2 is amended: a stopped demand scan may run one sizing run.
+  - Comment sources and GitHub are now optional.
+- **Security:** skills read only `plan.tier` from `/users/me`, because the response holds the proxy
+  password.
+- **Not yet evaluated:** the crawl-based owner-name step had one smoke test only (6 agency sites,
+  team or about page reached on 5, $0.003). The v1.4 fix pass itself has not been re-run.
+- **v1.4 bundle:** staged in KV `wg0mG9VcKHRQ9d3Py`; zip and per-skill folders on the Desktop.
+
 ## Spend
 
 | Phase | Apify spend |

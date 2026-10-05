@@ -1,6 +1,6 @@
 #!/bin/bash
 # Package the four skills for sharing and for Replit.
-#   1. ~/Desktop/apify-growth-kit-skills-v1.3.zip   (share with Replit / Horacio)
+#   1. ~/Desktop/apify-growth-kit-skills-v1.4.zip   (share with Replit / Horacio)
 #   2. Apify key-value store "replit-growth-kit-skills" (wg0mG9VcKHRQ9d3Py), records
 #      skills.tgz + SHA256SUMS, readable anonymously by store ID, so a Repl can install
 #      the skills without GitHub access.
@@ -11,7 +11,7 @@ SKILLS="open-web-lead-engine demand-signal-scan competitor-teardown creator-shor
 WORK="$(mktemp -d)"
 cd "$ROOT/skills"
 for s in $SKILLS; do npx --yes skills-ref validate "$s" >/dev/null; done
-ZIP="$HOME/Desktop/apify-growth-kit-skills-v1.3.zip"
+ZIP="$HOME/Desktop/apify-growth-kit-skills-v1.4.zip"
 zip -r -X -q "$WORK/skills.zip" $SKILLS -x '*.DS_Store'
 mv "$WORK/skills.zip" "$ZIP"
 COPYFILE_DISABLE=1 tar -czf "$WORK/skills.tgz" $SKILLS

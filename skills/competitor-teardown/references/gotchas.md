@@ -24,9 +24,10 @@ write it into a workspace file; Replit projects get forked and shared.
 
 ## Cost
 
-- **Every Actor here is pay-per-event.** You are billed per event: results, but also start fees,
+- **Most Actors here are pay-per-event.** You are billed per event: results, but also start fees,
   some empty lookups and per-page charges, as each Actor's reference notes. The cap that matters is
-  the item cap rather than a timeout.
+  the item cap rather than a timeout. A few (the website crawler) bill on platform usage instead:
+  there, pages, memory and timeout are the caps.
 - **Multipliers are where bills come from.** `50 companies x 5 contacts each` is 250 billable
   attempts. Compute the product before the run and show it.
 - **A failed run still costs what it delivered.** Partial results are billed. Pull the dataset

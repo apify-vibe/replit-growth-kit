@@ -16,7 +16,7 @@ where they are investing, from data collected today. A model's memory of a compe
 stale and often invented; every claim in this teardown comes from a fetched source with its URL.
 
 **Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
-Apify, the one-budget-per-job rule and the $0.50 run-cap floor, pilots and evidence rules. Actor inputs, IDs and gotchas for
+Apify, the one-budget-per-job rule and run caps, pilots and evidence rules. Actor inputs, IDs and gotchas for
 every angle are in [references/actors.md](references/actors.md).
 
 ## Actors and attribution
@@ -106,7 +106,8 @@ category would mislead. Decide this from the search results, not from memory.
 
 Most review, ads and company Actors need an ID the builder will not know: a G2 slug, a Capterra
 numeric ID, a Trustpilot domain, an App Store ID or Play package, a Glassdoor `E<id>`, a LinkedIn
-company slug, an ATS board slug, a Facebook page.
+company slug, an ATS board slug, a Facebook page. Resolve the official pricing URL here too: the
+pricing link in the competitor's own site navigation, or `site:<domain> pricing`.
 
 Resolve them in one step with `apify/google-search-scraper`, using one `site:` query per
 competitor and source (for example `site:g2.com/products notion reviews`, `site:glassdoor.com/Reviews
@@ -139,10 +140,17 @@ Collection notes that matter:
 - **Pricing:** crawl the official pricing URL with `apify/website-content-crawler` in
   `playwright:adaptive` mode, since pricing grids often render client side. Some pricing pages
   are geo-gated and return only a country selector: try the locale URL (`/en-us/pricing`) or set
-  the proxy country to the builder's market. Run crawls one after another. A third-party price is
+  the proxy country to the builder's market. A 403 means bot blocking: retry once with the
+  residential proxy. Set `htmlTransformer: "none"`: the default transform dropped the price cards
+  or plan names on 3 of 4 pages in testing. Pricing behind a monthly/annual toggle returns one
+  state only; say which. Run crawls one after another. A third-party price is
   secondary evidence, labelled as such, never a substitute for an official one.
 - **Reviews and complaints:** pull the newest reviews and a separate low-star slice. The low-star
-  slice is where the wedge lives; the newest slice keeps it honest. A recent low-star review sits
+  slice is where the wedge lives; the newest slice keeps it honest. On G2 the low-rating sort
+  returned mostly 5-star reviews (its rating comes from the reviewer's NPS answer), and Capterra
+  has no date filter, so B2B low-star slices are thin or old: filter by the review's own rating and
+  date yourself, and lean on app-store and Reddit complaints when they come back empty. Expect
+  vendor-solicited reviews on G2 for large vendors (42 of 47 for one); weigh them accordingly. A recent low-star review sits
   in both slices: deduplicate on review ID before counting themes. Keep the low-star slice recent
   with a date floor (the last 18 months): sorted by rating alone, most of it is years old. Theme
   complaints from the review text itself; provider "theme" fields are often empty.
@@ -151,7 +159,9 @@ Collection notes that matter:
 - **Ads:** collect only from the verified advertiser identity from step 4: the Facebook page
   linked from their site for Meta, and their **domain** (never the brand name) for Google, then
   check the returned advertiser name matches. A name search returned a different company in
-  testing. LinkedIn jobs take the company ID from step 4 (`companyId`); TikTok ads take the exact
+  testing. LinkedIn ads take names only and returned 40 namesakes in 45 rows for one competitor:
+  skip that angle unless the company name is distinctive. LinkedIn jobs take the company ID from
+  step 4 (`companyId`); TikTok ads take the exact
   advertiser name plus `advertiserBizId` when the library URL shows it. The LinkedIn ad library
   takes names only. Wherever a name is the input, a brand name returns namesakes ("Vanta" also
   returned Vantage and Vantaca): drop rows whose company or advertiser name does not match. Currently active ads show what they are paying to say now.

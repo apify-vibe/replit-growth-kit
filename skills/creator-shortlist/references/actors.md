@@ -94,7 +94,8 @@ Discovery:
 ```
 
 `maxItems` caps the whole run, not each search term: run one term (or one handle in step 5) per
-run to control the split. `minimumFavorites: 20` with `Top` skews toward large accounts (about a
+run to control the split. Each such run is cheap (about $0.005), so the in-flight budget check uses
+its estimated cost, not its cap. Add `start` (about 90 days back) to discovery searches. `minimumFavorites: 20` with `Top` skews toward large accounts (about a
 third of discovered authors were above the band); lower it to 5 for a micro band.
 
 Latest 12 own posts per creator:
@@ -130,7 +131,8 @@ Recent posts, `harvestapi/linkedin-profile-posts`:
 {"targetUrls":["https://www.linkedin.com/in/handle"],"maxPosts":12,"includeReposts":false,"includeQuotePosts":false}
 ```
 
-Keep a post only when `author.publicIdentifier` is the creator and `repostId` is empty. Sort by
+Keep a post only when `author.publicIdentifier` is the creator and the post has no `repostedBy`
+(`repostId` is not returned in every output). Sort by
 `postedAt.timestamp`: output order is not by date.
 
 Followers, `harvestapi/linkedin-profile-scraper` ($0.004 per profile):
@@ -139,7 +141,8 @@ Followers, `harvestapi/linkedin-profile-scraper` ($0.004 per profile):
 {"urls":["https://www.linkedin.com/in/handle"],"profileScraperMode":"Profile details no email ($4 per 1k)"}
 ```
 
-The mode value includes the price text. Returns `followerCount`, `headline`, `about`, `creator`.
+The mode value includes the price text. Returns `followerCount`, `headline`, `about`, `creator`;
+the profile's website link sits in `profileActions[]`.
 Do not use the email-search mode: the skill takes only emails the creator published.
 
 ### Newsletters (~$0.009 per newsletter)
@@ -157,8 +160,8 @@ Then `automation-lab/substack-scraper` (144 users, 98.7% success):
 {"urls":["https://example.substack.com"],"maxPostsPerNewsletter":12,"includeContent":false,"includePublicationInfo":true}
 ```
 
-Substack publications carry no external URL; the contact step uses the publication's own
-`/about` and `/advertise` pages.
+Substack publications carry no external URL; the contact step uses the publication's own `/about`
+page (every `/advertise` URL returns a page, so it proves nothing).
 
 Keyword discovery in the same Actor: `{"keywords":["freelancing"],"maxSearchResultsPerKeyword":10,"includeContent":false,"includePublicationInfo":true}`
 (returns posts, so the same publication repeats; some hits are off-niche).

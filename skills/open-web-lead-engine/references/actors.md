@@ -30,7 +30,8 @@ contact fields. `lukaskrivka/google-maps-with-contact-details` is a valid fallba
 | `website` | enum | `"withWebsite"` for email lists. `"withoutWebsite"` for builders selling websites or booking pages: phones, no emails. |
 | `scrapeContacts` | boolean | `true` to crawl each place's website for contacts (billed per place) |
 | `placeMinimumStars` | enum | `""`, `"three"`, `"four"` and half steps. Cheaper than post-filtering. |
-| `maximumLeadsEnrichmentRecords` | integer | People per business. Default 3. **Never `0`**, which disables enrichment. |
+| `maximumLeadsEnrichmentRecords` | integer | People per business. **Always set it** (3 is a good cap): the live default is `0`, which disables enrichment. |
+| `placeIds` | array | Enrich known places only: the second lane A run, after chains are dropped |
 | `leadsEnrichmentDepartments` | array | `[]` for any department |
 | `verifyLeadsEnrichmentEmails` | boolean | `true` on every run |
 | `scrapeSocialMediaProfiles` | object | `{"instagrams": true, "facebooks": true}`. Each enabled network bills separately. |
@@ -40,9 +41,11 @@ Minimum `maxTotalChargeUsd`: $0.50. Cost multiplier: `places × maximumLeadsEnri
 
 Known behaviour: enrichment titles are noisy for small businesses (servers, trainers, bussers
 alongside owners), and enrichment emails at restaurants were mostly catch-all or no-mailbox in
-testing, so the role check in step 7 and the verifier in step 6 both matter. Large chains
-are excluded from enrichment server side. Businesses with no website return an empty
-`leadsEnrichment[]`, which is expected rather than a failure.
+testing, so the role check in step 7 and the verifier in step 6 both matter. Chains are **not**
+excluded from enrichment: national chains returned three corporate people each (37% of enriched
+records in one run), which is why lane A drops chains before enriching. Businesses with no website
+return an empty `leadsEnrichment[]`, which is expected rather than a failure. Social profiles bill
+per profile found.
 
 ## Lane B: company websites you already have
 
@@ -123,7 +126,8 @@ FREE) charged whole per 25 profiles, so pilot with exactly one page.
 | `currentJobTitles` | array | The title filter (`searchQuery` is fuzzy text, not a filter) |
 | `locations` | array | Plain text. Use `"United Kingdom"`, not `"UK"` (resolves to Ukraine). |
 | `currentCompanies` | array | Full LinkedIn company URLs |
-| `companyHeadcount` | array | LinkedIn bucket letters; check the size of returned companies rather than trusting the bucket |
+| `companyHeadcount` | array | LinkedIn size letters: A self-employed, B 1-10, C 11-50, D 51-200, E 201-500, F 501-1,000, G 1,001-5,000, H 5,001-10,000, I 10,001+ |
+| `companyHeadquarterLocations` | array | Company HQ location, plain text; use it instead of a separate HQ lookup |
 | `industryIds` | array | Filters the **person's** industry, not the company's: in testing it let energy, robotics and insurance firms through |
 | `maxItems`, `takePages` | integer | Set both |
 
@@ -181,24 +185,42 @@ The only verifier tested that marked a nonexistent mailbox `invalid`. Also takes
 `emailField` to verify a previous run's dataset. Avoid `michael.g/email-verifier-validator` on
 FREE ($0.10 per email) and because it cannot tell a missing mailbox from an unreachable server.
 
-### Owner or manager name from a website: `apify/ai-web-scraper`
+### Owner or manager name from a website: `apify/website-content-crawler`
+
+Crawl the pages that name people, then read them yourself:
+
+```json
+{"startUrls":[{"url":"https://example.com/"}],"crawlerType":"cheerio","maxCrawlDepth":1,"maxCrawlPages":30,
+ "includeUrlGlobs":[{"glob":"https://example.com/**about**"},{"glob":"https://example.com/**team**"},{"glob":"https://example.com/**people**"},{"glob":"https://example.com/**contact**"}],
+ "htmlTransformer":"none","removeElementsCssSelector":"script, style, noscript, svg"}
+```
+
+One run covers a batch of sites (one start URL and its globs each); `maxCrawlPages` caps the whole
+run, so set it to about 5 per site. Usage-billed: about $0.0004 per page (6 sites, 17 pages:
+$0.0025 in a smoke test, reaching the team or about page on 5 of 6), bounded by pages, `timeout`
+and `memory`, not by `maxTotalChargeUsd`. `htmlTransformer: "none"` keeps headings and cards the
+default readable-text transform drops. Read each page's text for names next to titles. Home pages
+also carry client testimonials ("Owner & Managing Director, <client>"): a name counts only on the
+business's own about, team or people page, or where the page says the person runs this business.
+Sites that render their team with scripts return little with `cheerio`; use `playwright:adaptive`
+for those, or the fallback below.
+
+### Fallback: `apify/ai-web-scraper`
+
+For sites the crawl could not read. About $0.02 per page item it writes, including pages where it
+found nobody: $0.04 to $0.10 per site, which made it 87% of one job's spend. Founders found on 11
+of 37 Maps-sourced agency sites in one run.
 
 ```json
 {"startUrls": [{"url": "https://example.com/"}], "extractionMode": "agentic",
- "prompt": "Return JSON {\"business_type\": string, \"people\": [{\"name\": string, \"title\": string, \"url\": string}]}. business_type: what this business is, in a few words. people: only people the site says currently own, founded or manage THIS business (owner, co-owner, founder, managing director, general manager), with the URL of the page that says so. Exclude clients, case-study subjects, testimonials, partners and past owners. Empty list if none is stated.",
+ "prompt": "Return JSON {\"business_type\": string, \"people\": [{\"name\": string, \"title\": string, \"url\": string}]}. business_type: what this business is, in a few words. people: only people the site says currently own, founded or manage THIS business, or hold this title: <ICP buyer title>, with the URL of the page that says so. Exclude clients, case-study subjects, testimonials, partners and past owners. Empty list if none is stated.",
  "maxPagesToVisit": 5, "maxCrawlDepth": 2}
 ```
 
 Run option `timeout: 3600` and at most 25 sites per run: the default 900-second timeout cut off
-batches of 53 and 132 sites. This Actor is the exception to the gotchas advice to lower caps rather
-than raise timeouts. Use `agentic` (`single` does not follow links) and at least 5 pages per site,
-or the crawl ends on menu pages.
-
-Billing: about $0.02 per page item it writes, including pages where it found nobody; plan $0.04 to
-$0.10 per site. Measured yield: most of 25 agency sites gave a founder or director (19 leads from
-the case); 1 usable name from 53 independent restaurant sites. Output keys drift from row to row
-unless the prompt fixes them, as above. Spot-check one hit per batch by fetching its cited page:
-it has named a client from a portfolio page as founder, and a 1979 co-founder as current owner.
+batches of 53 and 132 sites. Use `agentic` (`single` does not follow links). Spot-check 3 hits per
+batch by fetching the cited page: it has named a client from a portfolio page as founder, and a
+1979 co-founder as current owner.
 
 It writes one item per page, so read the output per site:
 - Take `business_type` only from the item for the start URL (the homepage). On other pages it

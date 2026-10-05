@@ -16,7 +16,7 @@ they use. Everything else in a growth plan gets better once you know that: the I
 cold email subject lines stop being guesses, and the landing page can quote a real person.
 
 **Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
-Apify, the one-budget-per-job rule and the $0.50 run-cap floor, pilots and evidence rules. Actor inputs and traps are in
+Apify, the one-budget-per-job rule and run caps, pilots and evidence rules. Actor inputs and traps are in
 [references/actors.md](references/actors.md).
 
 ## Actors and attribution
@@ -80,24 +80,26 @@ product-category words:
 
 Weight toward complaint phrases: they find copy, and nobody else is monitoring them. Check each
 phrase for words that belong to a neighbouring community: for a habit app, "quit" pulled
-quit-smoking trackers and "streak" pulled Snapchat streaks. Add the product's context word, or
-drop the phrase.
+quit-smoking trackers and "streak" pulled Snapchat streaks, and the single word "unpaid" pulled
+unpaid internships. Apply the same check to single words and sizing keywords ("e2b" mixed in an
+unrelated company). Add the product's context word, or drop the phrase.
 
 Then pick the sources. When the builder names them, those are the plan (suggest one more from the
 table only as a free question). Otherwise pick from the audience:
 
 | Audience | Sources |
 |---|---|
-| Office-based B2B: agencies, SaaS, HR, finance, operations | Reddit, LinkedIn comments, incumbent reviews, search |
+| Office-based B2B: agencies, SaaS, HR, finance, operations | Reddit, incumbent reviews, search |
 | Hands-on B2B: hospitality, trades, retail, clinics | Reddit, incumbent reviews, search (forums and Facebook groups that rank) |
-| Developers and technical buyers | GitHub issues, Hacker News, Reddit, X |
-| Consumers under 35 | Reddit, app-store reviews, YouTube comments; TikTok comments for the audience's own words only |
-| Creators and freelancers | Reddit, X, YouTube comments |
+| Developers and technical buyers | Hacker News, Reddit, X, search |
+| Consumers under 35 | Reddit, app-store reviews, search |
+| Creators and freelancers | Reddit, X, search |
 
-LinkedIn comment sections under hands-on trades are mostly consultants and vendors (4 relevant
-comments in 42 for restaurant managers in testing); keep LinkedIn for office-based roles. TikTok
-comments under complaint videos are real people reacting to the video, rarely describing a tool
-problem; they are useful for wording, not as the main evidence.
+Comment sources (LinkedIn, YouTube and TikTok comments) and GitHub issues run only when the
+builder asks for them. In testing they failed or barely passed their pilots in 4 of 5 demand scans
+(LinkedIn comments under trades posts are mostly consultants; TikTok and YouTube comments react to
+the video rather than describe a tool problem), and GitHub issues failed in both rounds. When asked
+for, run them and say up front that they are usually thin.
 
 Incumbent reviews need named competitors: from the app's own copy, the builder's request, a
 competitor teardown if one ran, or the competitors the probe surfaces. With none, skip the source.
@@ -110,13 +112,12 @@ marked "runs only if its pilot passes".
 
 One `apify/google-search-scraper` call with two or three complaint phrases, one page each.
 
-A page written by someone who has the problem (a forum thread, a Reddit post, a Q&A answer, a
-community post) means continue. When every result was written by a vendor, a regulator, a
-standards body, a consultancy or a trade publisher, stop: some real problems are never discussed in
-public, common in regulated B2B and internal enterprise tooling. Run the sizing step anyway (it is
-in the approved plan and gives the builder the one useful number), write the report explaining the
-stop, and point the builder to the lead engine (`open-web-lead-engine`, if installed) to reach the
-buyers directly.
+Continue only when at least one result was written by someone who has the problem: a forum
+thread, a Reddit post, a Q&A answer, a community post. Otherwise stop: some real problems are never
+discussed in public, common in regulated B2B and internal enterprise tooling. After a stop, run the
+sizing step once (one volume run, no follow-up; it is in the approved plan and gives the builder
+the one useful number), write the report explaining the stop, and point the builder to the lead
+engine (`open-web-lead-engine`, if installed) to reach the buyers directly.
 
 ### 4. Size the demand (paid, cheap)
 
@@ -133,9 +134,8 @@ plus the category's plain name ("staff scheduling app"):
   drop templated autocompletions ("app download", "apk"). Not every query returns them.
 
 Say plainly in the report what this is: interest in the problem and the category, not demand for
-this app. The `cpc` field is an advertiser bid estimate, not an average cost per click; report it
-as "advertisers bid up to $X per click" and treat a high value as a sign of a paying and crowded
-market.
+this app. `cpc` is the average cost per click advertisers pay; `high_top_of_page_bid` is the top
+of the bid range. A high value signals a paying and crowded market.
 
 ### 5. Pilot each source (paid)
 
@@ -187,10 +187,14 @@ Hacker News 30 threads; search 2 pages per phrase.
 
 - **Reddit:** one subreddit per run, one run at a time (parallel Reddit jobs get rate limited).
   Searching the same subreddit with two words re-bills the posts they share; pick words that
-  overlap little. If a run reports SUCCEEDED with 0 items, that is a blocked scrape, not an empty
-  community: retry it once with the backup Actor (see `actors.md`).
-- **X:** one pass sorted `Latest` with a `start` date 90 days back, for warm threads; one sorted
-  `Top` for phrasing. Set `minimumFavorites: 2`, add `-giveaway -promo -discount` style exclusions,
+  overlap little. Add one pass sorted by new (`sort=new`, `t=month`) for warm threads: relevance
+  search surfaces mostly threads older than 90 days. If a run reports SUCCEEDED with 0 items, that
+  is a blocked scrape, not an empty community: retry it once with the backup Actor (see
+  `actors.md`). `score` and member counts are often 0 or missing; treat them as unknown.
+- **X:** pilot one phrase per run (`maxItems` caps the run, so a multi-phrase pilot tests only the
+  first phrases). Collect one pass sorted `Latest` with a `start` date 90 days back, for warm
+  threads (expect mostly vendors: 9 usable rows in 99 in testing), and one sorted `Top` for
+  phrasing. Set `minimumFavorites: 2`, add `-giveaway -promo -discount` style exclusions,
   and set `includeSearchTerms: true` so each post shows which phrase found it. A phrase that matches
   nothing returns a billed `noResults` row; drop it.
 - **YouTube:** comments carry relative dates only ("3 months ago"); keep that text with the date
