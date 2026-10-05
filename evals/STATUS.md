@@ -171,6 +171,22 @@ Grader fix: `grade.py` now splits multi-run `source_run_id` cells; the G4 bar is
 
 v2 spend: survey $0.66 + evals $11.67 = **about $12.30**.
 
+## Creators + demand v2, review, v1.3 (2026-10-05, branch `creators-demand-v2`)
+
+- **Creator shortlist:** a B2B-voices track (LinkedIn, X, newsletters, podcasts) beside UGC video;
+  enterprise purchases still stop.
+- **Demand scan:** search volume, LinkedIn comments, TikTok comments (language only), incumbent
+  low-star reviews, GitHub issues and Stack Overflow; Reddit primary swapped to `fatihtahta`.
+- **Round cd1:** 11 cases, all pass the frozen bar, $5.20. Two passes sat on weak lanes (TikTok
+  comments, GitHub); the bar counts rows, not usefulness.
+- **Review:** 18 transcripts plus a Codex cold read, in `evals/runs/2026-10-05-cd1/REVIEW.md`.
+  The fix pass covers all four skills: one plan-first budget form, verification that always runs
+  and overrides finders, a FREE-tier cost trap in lane A, a chain rule limited to national and
+  regional brands, and the compliance section replaced by a B2B contact-data rule (Lukas).
+- **Not re-run after the fix pass**, by decision: Lukas tests v1.3 in Replit first, using
+  `docs/replit-handover-prompts.md`.
+- **v1.3 bundle:** staged in KV `wg0mG9VcKHRQ9d3Py`; zip and per-skill folders on the Desktop.
+
 ## Spend
 
 | Phase | Apify spend |

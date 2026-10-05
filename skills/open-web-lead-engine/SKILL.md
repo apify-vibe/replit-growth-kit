@@ -42,6 +42,7 @@ Actor is unavailable, as the runtime reference describes.
 | Lane D, people by title: database | `pipelinelabs/lead-scraper-apollo-zoominfo-lusha-ppe` |
 | Lane D, people by title: LinkedIn | `harvestapi/linkedin-profile-search` |
 | Lane D, people at named companies | `harvestapi/linkedin-company-employees` |
+| Lane D, company HQ check | `harvestapi/linkedin-company` |
 | Gaps: owner or manager name | `apify/ai-web-scraper` |
 | Gaps: email finder | `scalelist/email-finder` |
 | Gaps: email verifier | `bounceverify/bounceverify-email-verifier` |
@@ -58,9 +59,9 @@ run starts fail while reads work, follow "When run starts fail" in the runtime r
 - [ ] 1. Inspect the app
 - [ ] 2. Judge outbound fit, stop if it fails
 - [ ] 3. Write the ICP as criteria, pick a lane, ask for the budget
-- [ ] 4. Pilot (gated)
-- [ ] 5. Scale (gated)
-- [ ] 6. Fill the gaps: name, email, verification (gated)
+- [ ] 4. Pilot (paid)
+- [ ] 5. Scale (paid)
+- [ ] 6. Fill the gaps and verify emails (paid)
 - [ ] 7. Sort every row: lead, review or excluded
 - [ ] 8. Deliver and hand off
 ```
@@ -98,25 +99,32 @@ Then pick one lane:
 |---|---|---|
 | **A. Businesses in a place** | The ICP is a business type in a city: restaurants, clinics, gyms, salons, contractors, hotels, and also agencies and studios with Maps listings | `compass/crawler-google-places` with its contact and lead add-ons |
 | **B. You have company websites** | The builder has a domain list, a signup export or a directory | `vdrmota/contact-info-scraper` |
-| **C. Companies you must find first** | A category with no map presence and thin database coverage: small agencies, pre-seed startups, niche marketplaces | `apify/google-search-scraper`, then lane B |
+| **C. Companies you must find first** | A category with no map presence and thin database coverage: small agencies, pre-seed startups, marketplace businesses (the company itself, not listing pages on a marketplace) | `apify/google-search-scraper`, then lane B |
 | **D. People by job title** | The buyer is a title (CTO, head of growth, HR lead) at companies with roughly 10+ staff | Database first; LinkedIn when the database pilot misses; company employees when the builder names the companies |
 
 Lane D's two sources trade price for precision. The database costs about $0.001 per lead and
 returned deliverable emails in testing; LinkedIn costs 8 to 10x more and gives live profiles with
-exact title and location filters. Pilot the database first. Switch to LinkedIn when its pilot
-misses the bar, when the ICP sits outside the US and Western Europe, or when the builder needs a
-LinkedIn URL on every row. For micro businesses, use lanes A to C: databases cover them poorly.
+exact title and location filters. Pilot the database first. Go straight to LinkedIn when the
+builder needs a LinkedIn URL on every row or the ICP sits outside the US and Western Europe, and
+switch to it when the database pilot misses the bar. For micro businesses, use lanes A to C:
+databases cover them poorly. When agencies or studios fit both A and C, use A in a city and C
+when the ICP has no city.
 
 Lane A can also target businesses **without** a website (`website: "withoutWebsite"`), which is
 the list a builder selling websites or booking pages wants. Those rows will have phones, not
 emails; say so up front.
 
-Now ask for the job's budget (runtime reference, section 3) in one form: the pilot, the scale
-step and the gap-filling step, each with its Actors, expected items and cost ceiling, plus the
-total. Quote prices at the builder's tier (`plan.tier`, not `plan.id`). On the FREE tier the Maps
-and crawl lead add-ons cost $0.10 per lead: show that line explicitly, or prefer lane D and step 6.
+Lane A size: Maps returns no headcount, so size is a signal on lane A, never required (use 100+
+Google reviews as the proxy). Geography: metro suburbs count as the city unless the builder says
+otherwise.
 
-### 4. Pilot (gated)
+Now ask for the job's budget (runtime reference, section 3) in one form: the pilot, the scale
+step and step 6, each with its Actors, expected items and cost ceiling, plus the total. Quote
+prices at the builder's tier (`plan.tier`, not `plan.id`). On the FREE tier the Maps and crawl
+lead add-ons and social profiles cost $0.10 each: there, lane A runs with 1 person per place and
+social profiles off (about $0.10 to $0.15 per place instead of $0.50), and the form says so.
+
+### 4. Pilot (paid)
 
 Run a pilot of 10 to 20 companies or people, using the pilot bar and one-rewrite rule from the
 runtime reference. Before it returns, write down what counts as relevant. Directories, job boards
@@ -129,18 +137,20 @@ For lane C, keep listicles out of the search before they cost a pilot: put the b
 
 For lane D on LinkedIn, a search page bills whole (25 profiles), so the pilot is one page.
 
-### 5. Scale (gated)
+### 5. Scale (paid)
 
-Scale the passing pilot as far as the budget covers. Set expectations honestly: for small local
+Scale the passing pilot up to the scale shown in the form (up to twice that is still inside the
+plan). Set expectations honestly: for small local
 businesses and agencies, named decision-makers with an email come back for a minority of
 companies. Measured on independent restaurants before step 6 existed: 5 to 10 leads per 100
 places, plus 60 to 110 review rows with a business email but no named person. Step 6 converts some
 of those. For more leads, raise the place count rather than loosening the rules.
 
-Lane A cost multiplies: `places per search × searches` places, plus
+Lane A cost multiplies: `places per search × searches` places, plus up to
 `places × maximumLeadsEnrichmentRecords` person records, plus each social network enabled, each
-billed per item. Default caps: 50 places per search, 3 people per company, Instagram and Facebook
-only.
+billed per item. Expect about one enriched person per place, not the cap: in testing the cap-based
+estimate overshot about 2.5x. Default caps on paid tiers: 50 places per search, 3 people per
+company, Instagram and Facebook only; on FREE, see step 3.
 
 Settings that carry the quality of the list:
 - Lane A: `skipClosedPlaces: true`; `website: "withWebsite"` for email lists;
@@ -156,29 +166,33 @@ Settings that carry the quality of the list:
 - Maps searches drift into neighbouring towns: check each place's address against the ICP
   geography in step 7.
 
-### 6. Fill the gaps: name, email, verification (gated)
+### 6. Fill the gaps and verify emails (paid)
 
-Rows that are one field short of a lead get one pass each, in this order, within the budget:
+First sort provisionally with step 7's rules. A row is **one field short** when it would be a lead
+but for a missing named person or a missing email. Those rows get one pass each, in this order:
 
-1. **No named person, has a website** (lane A and B review rows): run `apify/ai-web-scraper` with
-   the prompt and run settings in `actors.md`. It bills about $0.02 per page it reads, so budget
-   $0.04 to $0.10 per site, and it is slow: batches of up to 25 sites with a one-hour run timeout.
-   It pays off for agencies, studios and other firms with a team page (measured: names for most
-   of 25 agency sites); for restaurants and shops it rarely does (1 usable name from 53 restaurant
-   sites, $0.24), so offer it there only when the builder wants every possible lead. Keep a name
-   only with its cited URL, and only when that page says the person currently holds the role at
-   this business; clients, case-study subjects and past founders go to excluded.
-2. **Named person and company domain, no usable email**: `scalelist/email-finder`. It bills
-   lookups that find nothing, so budget per person looked up. Accept an email only on the
-   company's own domain; a different domain goes to review.
-3. **Every email not already verified at the source** (crawled site emails, every finder result
-   including `Valid` ones, Maps enrichment emails marked catch-all or unchecked, database sources
-   with no status field): `bounceverify/bounceverify-email-verifier`, all in one run. It costs
-   under a tenth of a cent per email. Skip only emails the database returned as `deliverable`,
-   LinkedIn as `valid`, or Maps as `ok`. In testing the finder called a catch-all domain `Valid`.
+1. **No named person, has a website**: run `apify/ai-web-scraper` with the prompt and run settings
+   in `actors.md`. It bills about $0.02 per page it reads, so budget $0.04 to $0.10 per site, and it
+   is slow: batches of up to 25 sites with a one-hour run timeout. It pays off for agencies, studios
+   and other firms with a team page (measured: names for most of 25 agency sites); for restaurants
+   and shops it rarely does (1 usable name from 53 restaurant sites, $0.24), so offer it there only
+   when the builder wants every possible lead. Keep a name only with its cited URL, and only when
+   that page says the person currently holds the role at this business; clients, case-study
+   subjects and past founders go to excluded. Spot-check 3 hits per batch by fetching the cited
+   page.
+2. **Named buyer and company domain, no personal email**: `scalelist/email-finder`. A business
+   inbox (`info@`) stays as the fallback if the finder misses. The finder bills lookups that find
+   nothing; on small businesses expect about 5 lookups per email found. Accept a found email only
+   on the company's own domain; drop one on another domain from the row.
 
-Record which step produced each value in `email_source` (step 8) and keep every raw status.
-Skip this step when nothing is one field short.
+Then, whether or not any row was short, **verify every email that was not verified at the
+source** with `bounceverify/bounceverify-email-verifier`, all in one run (under a tenth of a cent
+per email). That covers crawled site emails, every finder result (`Valid` included: the finder
+called a catch-all domain `Valid` in testing), Maps enrichment emails other than `ok`, and database
+emails with no status. Skip only emails the database returned as `deliverable`, LinkedIn as
+`valid`, or Maps as `ok`. When the verifier ran, its status is the email's status.
+
+Record which step produced each value in `email_source` (step 8) and keep the raw status.
 
 ### 7. Sort every row: lead, review or excluded
 
@@ -193,35 +207,40 @@ Every sourced row lands in exactly one file, with a reason. Nothing is silently 
    row then sorts on what remains.
 2. **Review.** A required criterion is unknown, or no identifiable person was returned. A company
    name is not a person: a lead needs a first and last name from the row. Contacts that may belong
-   to a different company also go here. Company size is not in LinkedIn profile output: when size
-   is required, check it with `harvestapi/linkedin-company` inside the budget, or the row lands
-   here.
+   to a different company also go here. On LinkedIn rows, read size from
+   `currentPosition[].company.employeeCount`. Company headquarters are not in the profile: when
+   company geography is required, check it with `harvestapi/linkedin-company` inside the budget,
+   or the row lands here.
 3. **Lead.** Every required criterion supported, a named decision-maker (owner, co-owner,
-   founder, general manager, managing director, or the ICP's buyer title), and an email no
+   founder, CEO, managing partner, general manager, managing director, or the ICP's buyer title;
+   assistant and deputy managers are not decision-makers), and an email no
    provider or verifier marked `invalid`: the person's own, or the business's published address
    (`info@`, `hello@`) when the person has none. Record which in `email_type` (`personal` or
    `business`). Phone-only rows go to review.
 
 Before sorting, two checks for local businesses:
-- **Chains.** When the ICP asks for independents, exclude places that belong to a chain or a
-  larger host business: a brand with three or more locations (counted in the results or stated
-  on its own site), a corporate parent's site (hotel groups, department
-  stores), or enriched people whose titles are corporate (VP, regional, group). Reason:
-  `out_of_icp_chain`.
+- **Chains.** When the ICP asks for independents, exclude national and regional brands (10 or
+  more locations, counted in the results or stated on their own site), places run by a corporate
+  parent (hotel groups, department stores), and enriched people whose titles are corporate (VP,
+  regional, group). Small local groups of 2 to 9 locations stay when the enriched person is an
+  owner or operator: they are owner-run. Reason: `out_of_icp_chain`.
 - **Booking platforms are not websites.** OpenTable, Toast, Resy, Square, Mindbody, Fresha and
   similar links are not the business's own domain. Treat the place as having no website for the
   spurious-match check and for contact crawling.
 
 Score leads only, 0 to 100, from what the row actually contains: verified email 40, a named person
 whose title matches the buyer role 30, phone 10, social presence 10 (a linked profile with 500+
-followers, or a LinkedIn profile URL; activity is not checked), the size signal 10 (the builder's
-size rule if the row supports it; for local businesses with no headcount, 100+ Google reviews).
-"Verified" means a provider or the verifier explicitly returned a passing status for that exact
-email (`valid`, `Valid`, `deliverable`, or Maps' `emailVerification.result: "ok"`); unknown, catch-all, risky or missing statuses score 0 and the raw status stays in the
-row. Write the components next to the score and check they add up.
+followers, or a person's own LinkedIn profile URL; activity is not checked), the size signal 10
+(the builder's size rule if the row supports it; for local businesses with no headcount, 100+
+Google reviews). "Verified" means the email's final status (step 6) is `valid`, `deliverable` or
+Maps' `ok`; a finder's `Valid` alone does not count. Unknown, catch-all, risky or missing statuses
+score 0 and the raw status stays in the row. Write the components next to the score and check they
+add up. The score orders the list; it does not predict replies, and its weights were never
+measured against outcomes.
 
-Deduplicate leads on lowercased email, or on lowercased first name + last name + company domain
-when there is no email. Never on domain alone: two branches of one business stay two rows.
+Deduplicate leads on lowercased email plus person, or on lowercased first name + last name +
+company domain when there is no email. A shared business inbox (`info@`) does not merge two named
+people or two branches. Never on domain alone: two branches of one business stay two rows.
 
 ### 8. Deliver and hand off
 
@@ -232,15 +251,16 @@ Write to the workspace root, even after an empty or stopped pilot (CSVs keep the
   `site`, `finder`), `phone`, `linkedin_url`, `city`, `country`, `score`, `score_components`,
   `source_query`, `source_url`, `source_actor`, `source_run_id`. Sorted by score. When a row
   draws on several runs (step 6), list every Actor and run ID in source order, separated by
-  `; `, and put the page that states the name in `source_url`.
+  `; `, and put the page that states the name in `source_url`. `email_status` holds the final
+  status (the verifier's when it ran).
 - `review_needed_leads.csv`: same columns plus `review_reason`. Named people first.
 - `excluded_leads.csv`: same columns plus `exclusion_reason`.
 - `run_metadata.json`: the ICP criteria, lane, run and dataset IDs, caps, the budget and its
-  answer, counts per stage (`sourced`, `excluded`, `review_needed`, `gap_filled`, `deduplicated`,
-  `leads`), and actual usage.
-
-If the job stopped before the budget form (fit check failed), `run_metadata.json` holds the fit
-verdict, the reason and empty counts, and no approvals file is written.
+  answer, counts per stage (`sourced_places` and `sourced_people` separately, `excluded`,
+  `review_needed`, `gap_filled`, `duplicates_removed`, `leads`), and actual usage. After a stop at
+  the fit check it holds the verdict, the reason and zero counts.
+- `growth-kit-approvals.jsonl`: written once a budget form was shown (runtime reference,
+  section 3).
 
 If `leads.csv` is empty, say so first, and name the criterion that blocked it. Suggest the smallest
 change that would help; never relax a required criterion on your own.
