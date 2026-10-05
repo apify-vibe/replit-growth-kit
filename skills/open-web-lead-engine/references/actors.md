@@ -162,7 +162,8 @@ returned US companies for "Germany". Find companies with the database source or 
 ```
 
 $0.015 per result at the top tier ($0.03 on FREE), 98% run success, `email_status` `Valid` or `Risky`.
-`Risky` means catch-all or unverified: send it through the verifier. Lookups that find nothing are
+Send every result through the verifier, `Valid` included: in testing it returned `Valid` on a
+domain the verifier marks catch-all. Lookups that find nothing are
 billed too. In testing it once returned an address on a different company's domain; accept only
 emails on the company's own domain. Alternative:
 `clearpath/email-finder-api` (`people: [{firstName, surname, domain}]`, filter on `isSafeToSend`,
@@ -198,7 +199,14 @@ the case); 1 usable name from 53 independent restaurant sites. Output keys drift
 unless the prompt fixes them, as above. Spot-check one hit per batch by fetching its cited page:
 it has named a client from a portfolio page as founder, and a 1979 co-founder as current owner.
 
-`business_type` doubles as the evidence for a business-type criterion in lane B, where the
+It writes one item per page, so read the output per site:
+- Take `business_type` only from the item for the start URL (the homepage). On other pages it
+  describes whatever the page is about, often a client ("airline flask brand").
+- Drop any person whose cited URL is a work, case-study, portfolio, clients or projects page: in
+  testing 4 of 20 names came from such pages.
+- A site with no items and no error is missing data: the row goes to review, not excluded.
+
+The homepage `business_type` is the evidence for a business-type criterion in lane B, where the
 contact crawl returns no description of the business.
 
 ## Output fields worth mapping

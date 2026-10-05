@@ -113,8 +113,8 @@ emails; say so up front.
 
 Now ask for the job's budget (runtime reference, section 3) in one form: the pilot, the scale
 step and the gap-filling step, each with its Actors, expected items and cost ceiling, plus the
-total. Quote prices at the builder's tier. On Apify's FREE plan the Maps and crawl lead add-ons
-cost $0.10 per lead: show that line explicitly, or prefer lane D and step 6.
+total. Quote prices at the builder's tier (`plan.tier`, not `plan.id`). On the FREE tier the Maps
+and crawl lead add-ons cost $0.10 per lead: show that line explicitly, or prefer lane D and step 6.
 
 ### 4. Pilot (gated)
 
@@ -171,11 +171,11 @@ Rows that are one field short of a lead get one pass each, in this order, within
 2. **Named person and company domain, no usable email**: `scalelist/email-finder`. It bills
    lookups that find nothing, so budget per person looked up. Accept an email only on the
    company's own domain; a different domain goes to review.
-3. **Any email without a provider status of valid or deliverable** (crawled site emails, finder
-   `Risky` results, Maps enrichment emails marked catch-all or unchecked, database sources with no
-   status field): `bounceverify/bounceverify-email-verifier`, all in one run. It costs under a
-   tenth of a cent per email; skip only emails a provider already returned as `valid` or
-   `deliverable`.
+3. **Every email not already verified at the source** (crawled site emails, every finder result
+   including `Valid` ones, Maps enrichment emails marked catch-all or unchecked, database sources
+   with no status field): `bounceverify/bounceverify-email-verifier`, all in one run. It costs
+   under a tenth of a cent per email. Skip only emails the database returned as `deliverable`,
+   LinkedIn as `valid`, or Maps as `ok`. In testing the finder called a catch-all domain `Valid`.
 
 Record which step produced each value in `email_source` (step 8) and keep every raw status.
 Skip this step when nothing is one field short.
@@ -204,8 +204,8 @@ Every sourced row lands in exactly one file, with a reason. Nothing is silently 
 
 Before sorting, two checks for local businesses:
 - **Chains.** When the ICP asks for independents, exclude places that belong to a chain or a
-  larger host business: the same brand name or website domain on three or more places in the
-  results, a known multi-location brand, a corporate parent's site (hotel groups, department
+  larger host business: a brand with three or more locations (counted in the results or stated
+  on its own site), a corporate parent's site (hotel groups, department
   stores), or enriched people whose titles are corporate (VP, regional, group). Reason:
   `out_of_icp_chain`.
 - **Booking platforms are not websites.** OpenTable, Toast, Resy, Square, Mindbody, Fresha and
