@@ -1,6 +1,6 @@
 # Status: Replit Growth Kit skills
 
-_Last updated 2026-10-04 ~04:40 PDT, end of the overnight autonomous run._
+_Last updated 2026-10-04 evening: lead engine v2 (branch `lead-engine-lanes`, PR #2). Earlier sections describe v1.1._
 
 ## Where things stood before tonight
 
@@ -67,7 +67,7 @@ Round 1 fixes (27 items) are in `evals/runs/2026-10-04-r1/FIXES.md`, applied in 
 | competitor-teardown | **ship** | 3/3 cases; 7 angles live; wedges were real and specific |
 | demand-signal-scan | **ship** | 3/3 cases; r2 confirms the Reddit and YouTube fixes |
 | creator-shortlist | **ship** | 3/3 cases; r2 doubled yield on both platforms |
-| open-web-lead-engine | **ship with a stated yield, your call** | passed 3/3 in round 1 (10 and 15 leads), but after the correctness fixes the independent-restaurant case lands at 5 leads per 100 places (bar: 10). The fixes removed chains and staff that round 1 counted, so the lower number is the honest one. The skill now states this yield up front. v2 fix in the backlog: owner-name discovery from business websites. |
+| open-web-lead-engine | **v1.1: ship with a stated yield, your call** (superseded by v2, see below) | passed 3/3 in round 1 (10 and 15 leads), but after the correctness fixes the independent-restaurant case lands at 5 leads per 100 places (bar: 10). The fixes removed chains and staff that round 1 counted, so the lower number is the honest one. The skill now states this yield up front. v2 fix in the backlog: owner-name discovery from business websites. |
 
 
 
@@ -134,6 +134,42 @@ connection's own docs, User-Agent only where headers are allowed), plus a docume
 reads work but run starts 500, the builder adds `APIFY_TOKEN` as a Replit Secret and Agent calls
 the API with a plain HTTP client. Attribution is lost on `connectorFetch` because it accepts no
 headers: worth raising with Replit (the connector could send its own identifying User-Agent).
+
+## Lead engine v2 (2026-10-04 evening, branch `lead-engine-lanes`)
+
+Rebuilt around four lanes plus a gap-filling step, on a live survey of 20 lead-gen Actors
+(`.replit-mirror/lead-sources.md`, local only; 25 run IDs, $0.66):
+
+- **Lane D (new), people by job title:** `pipelinelabs/lead-scraper-apollo-zoominfo-lusha-ppe`
+  first (~$0.001/lead, limited permissions; `code_crafter/leads-finder` returns 403 on admin
+  accounts), `harvestapi/linkedin-profile-search` second, `harvestapi/linkedin-company-employees`
+  for named companies.
+- **Step 6 (new), fill the gaps:** owner name from the site (`apify/ai-web-scraper`), email finder
+  (`scalelist/email-finder`), verifier (`bounceverify/bounceverify-email-verifier`).
+
+Same release, all four skills (Lukas's Replit test drive): Apify MCP server used first when
+connected; **one spend budget per job** instead of one form per step; `maxTotalChargeUsd` floor
+of $0.50 (low caps were failing runs and re-triggering approvals); one cap retry without a new form.
+
+| Case | Round | Lane | Leads | Cost | Result |
+|---|---|---|---|---|---|
+| lead-good-maps | v2r1 | A + step 6 | 10 | $1.34 | pass (v1.1 r3: 5) |
+| lead-good-search | v2r1 | A + step 6 | 44 | $3.33 | pass |
+| lead-bad-consumer | v2r1 | fit stop | 0 | $0 | pass |
+| lead-good-linkedin-title (new) | v2r1 | D LinkedIn | 29 | $1.12 | pass |
+| lead-good-domains (new) | v2r1 | B + step 6 | 19 | $1.40 | pass |
+| lead-good-maps | v2r2 | A | 13 | $2.18 | pass |
+| lead-good-domains | v2r2 | B + step 6 | 12 | $2.31 | pass |
+
+Verdict: **open-web-lead-engine v2 ships** (5/5 cases, regression 2/2). Fixes per round in
+`evals/runs/2026-10-04-v2r1/FIXES.md` and `v2r2/FIXES.md`. Known limits: the owner-name step pays
+off on agencies, rarely on restaurants (1 name from 53 sites); `ai-web-scraper` is the costliest
+step (~$0.02 per page). Bundle v1.2 staged in KV store `wg0mG9VcKHRQ9d3Py`, zip
+`~/Desktop/apify-growth-kit-skills-v1.2.zip`. Not yet run inside Replit.
+
+Grader fix: `grade.py` now splits multi-run `source_run_id` cells; the G4 bar is unchanged.
+
+v2 spend: survey $0.66 + evals $11.67 = **about $12.30**.
 
 ## Spend
 
