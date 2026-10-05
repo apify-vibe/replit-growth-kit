@@ -1,6 +1,6 @@
 ---
 name: creator-shortlist
-description: Use when a Replit builder is ready to run UGC or influencer marketing for the app they are building and does not know which creators to hire. Inspect the app, judge UGC fit, derive the niche as an audience, then discover TikTok, Instagram and YouTube creators from recent content in that niche, rank them by median engagement on their latest posts rather than follower count, flag dormant, sponsored-heavy and suspicious accounts, and collect the business emails creators published themselves. Pilots before scaling, gates spend per step, and ends at a shortlist of 15 to 30 micro creators with the maths shown. Never contacts anyone.
+description: Use when a Replit builder is ready to run UGC or influencer marketing for the app they are building and does not know which creators to hire. Inspect the app, judge UGC fit, derive the niche as an audience, then discover TikTok, Instagram and YouTube creators from recent content in that niche, rank them by median engagement on their latest posts rather than follower count, flag dormant, sponsored-heavy and suspicious accounts, and collect the business emails creators published themselves. Pilots before scaling, asks for one spend budget per job, and ends at a shortlist of 15 to 30 micro creators with the maths shown. Never contacts anyone.
 metadata:
   motion: growth
   vendor: apify
@@ -20,7 +20,7 @@ decay silently, and say little about whether an audience acts. A creator with 20
 fee. These are comparison signals, not guarantees of installs.
 
 **Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
-Apify, the one-gate-per-step rule, pilots and evidence rules. Actor inputs and traps are in
+Apify, the one-budget-per-job rule and the $0.50 run-cap floor, pilots and evidence rules. Actor inputs and traps are in
 [references/actors.md](references/actors.md).
 
 ## Actors and attribution
@@ -37,7 +37,8 @@ Actor is unavailable, as the runtime reference describes.
 | YouTube discovery and recent videos | `streamers/youtube-scraper` |
 | Published emails on linked sites | `vdrmota/contact-info-scraper` |
 
-Call Apify through the workspace's Apify connection, following that connection's own
+If the Apify MCP server is connected, call Apify through it (tool mapping in the runtime
+reference). Otherwise call Apify through the workspace's Apify connection, following that connection's own
 instructions for requests. If it lets you set headers, send
 `User-Agent: apify-replit-growth-kit/creator-shortlist` so runs from Replit can be counted. If run starts
 fail while reads work, follow "When run starts fail" in the runtime reference.

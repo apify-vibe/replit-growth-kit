@@ -1,6 +1,6 @@
 ---
 name: open-web-lead-engine
-description: Use when a Replit builder wants a first outbound lead list for the app they are building and their buyers are not in a contact database. Inspect the app, judge outbound fit, write the ICP as checkable criteria, then source leads from the open web (local businesses from Google Maps, companies from search results, contacts crawled from company websites), covering the buyers Apollo and ZoomInfo miss, such as independent businesses, non-US companies and pre-seed startups. Pilots before scaling and gates spend per step. Ends at a scored, deduplicated leads CSV plus a review list and an excluded list. Never sends anything.
+description: Use when a Replit builder wants a first outbound lead list for the app they are building and their buyers are not in a contact database. Inspect the app, judge outbound fit, write the ICP as checkable criteria, then source leads from the open web (local businesses from Google Maps, companies from search results, contacts crawled from company websites), covering the buyers Apollo and ZoomInfo miss, such as independent businesses, non-US companies and pre-seed startups. Pilots before scaling and asks for one spend budget per job. Ends at a scored, deduplicated leads CSV plus a review list and an excluded list. Never sends anything.
 metadata:
   motion: outbound
   vendor: apify
@@ -16,7 +16,7 @@ a scored CSV the builder can review and runs they can open in Apify Console. You
 sent email.
 
 **Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
-Apify, the one-gate-per-step rule, pilots and evidence rules. Actor inputs and traps are in
+Apify, the one-budget-per-job rule and the $0.50 run-cap floor, pilots and evidence rules. Actor inputs and traps are in
 [references/actors.md](references/actors.md).
 
 ## When to use something else
@@ -44,7 +44,8 @@ Actor is unavailable, as the runtime reference describes.
 | Lane B, contacts from websites | `vdrmota/contact-info-scraper` |
 | Lane C, find companies first | `apify/google-search-scraper`, then lane B |
 
-Call Apify through the workspace's Apify connection, following that connection's own
+If the Apify MCP server is connected, call Apify through it (tool mapping in the runtime
+reference). Otherwise call Apify through the workspace's Apify connection, following that connection's own
 instructions for requests. If it lets you set headers, send
 `User-Agent: apify-replit-growth-kit/open-web-lead-engine` so runs from Replit can be counted. If run starts
 fail while reads work, follow "When run starts fail" in the runtime reference.

@@ -1,6 +1,6 @@
 ---
 name: demand-signal-scan
-description: Use when a Replit builder does not yet know who wants the app they are building, where those people talk, or how they describe the problem. Inspect the app, name the problem and the workaround people use today, then scan Reddit, X, YouTube comments, Hacker News and search results for people describing it in their own words. Returns verbatim quotes with links (the copy for every other growth motion), ranked communities to launch in, and recent public threads worth a helpful reply. Probes before spending, pilots each platform, gates spend per step, and ends at a written report. Never posts, replies or messages anyone.
+description: Use when a Replit builder does not yet know who wants the app they are building, where those people talk, or how they describe the problem. Inspect the app, name the problem and the workaround people use today, then scan Reddit, X, YouTube comments, Hacker News and search results for people describing it in their own words. Returns verbatim quotes with links (the copy for every other growth motion), ranked communities to launch in, and recent public threads worth a helpful reply. Probes before spending, pilots each platform, asks for one spend budget per job, and ends at a written report. Never posts, replies or messages anyone.
 metadata:
   motion: growth
   vendor: apify
@@ -16,7 +16,7 @@ they use. Everything else in a growth plan gets better once you know that: the I
 cold email subject lines stop being guesses, and the landing page can quote a real person.
 
 **Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
-Apify, the one-gate-per-step rule, pilots and evidence rules. Actor inputs and traps are in
+Apify, the one-budget-per-job rule and the $0.50 run-cap floor, pilots and evidence rules. Actor inputs and traps are in
 [references/actors.md](references/actors.md).
 
 ## Actors and attribution
@@ -33,7 +33,8 @@ Actor is unavailable, as the runtime reference describes.
 | YouTube videos, then their comments | `streamers/youtube-scraper`, then `streamers/youtube-comments-scraper` |
 | Hacker News | `ryanclinton/hackernews-search` |
 
-Call Apify through the workspace's Apify connection, following that connection's own
+If the Apify MCP server is connected, call Apify through it (tool mapping in the runtime
+reference). Otherwise call Apify through the workspace's Apify connection, following that connection's own
 instructions for requests. If it lets you set headers, send
 `User-Agent: apify-replit-growth-kit/demand-signal-scan` so runs from Replit can be counted. If run starts
 fail while reads work, follow "When run starts fail" in the runtime reference.

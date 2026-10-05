@@ -1,6 +1,6 @@
 ---
 name: competitor-teardown
-description: Use when a Replit builder wants to understand the competitors of the app they are building, to price it, position it or find a wedge. Inspect the app, find the real competitors from search, then research them from every relevant angle with live data, covering pricing pages, reviews on G2, Capterra, Trustpilot, the app stores and Google Maps, complaints on Reddit, ads on Meta, Google, LinkedIn and TikTok, hiring and Glassdoor reviews, traffic, SEO, funding, tech stack and social presence. Picks the angles that fit the app, gates spend per step, and ends at a written teardown with a pricing table, the complaint themes that are the builder's wedge, and a battlecard per competitor.
+description: Use when a Replit builder wants to understand the competitors of the app they are building, to price it, position it or find a wedge. Inspect the app, find the real competitors from search, then research them from every relevant angle with live data, covering pricing pages, reviews on G2, Capterra, Trustpilot, the app stores and Google Maps, complaints on Reddit, ads on Meta, Google, LinkedIn and TikTok, hiring and Glassdoor reviews, traffic, SEO, funding, tech stack and social presence. Picks the angles that fit the app, asks for one spend budget per job, and ends at a written teardown with a pricing table, the complaint themes that are the builder's wedge, and a battlecard per competitor.
 metadata:
   motion: monetization
   vendor: apify
@@ -16,7 +16,7 @@ where they are investing, from data collected today. A model's memory of a compe
 stale and often invented; every claim in this teardown comes from a fetched source with its URL.
 
 **Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
-Apify, the one-gate-per-step rule, pilots and evidence rules. Actor inputs, IDs and gotchas for
+Apify, the one-budget-per-job rule and the $0.50 run-cap floor, pilots and evidence rules. Actor inputs, IDs and gotchas for
 every angle are in [references/actors.md](references/actors.md).
 
 ## Actors and attribution
@@ -31,7 +31,8 @@ Actor is unavailable, as the runtime reference describes.
 | Pricing pages | `apify/website-content-crawler` |
 | Every other angle | the exact ID listed for that source in [references/actors.md](references/actors.md) |
 
-Call Apify through the workspace's Apify connection, following that connection's own
+If the Apify MCP server is connected, call Apify through it (tool mapping in the runtime
+reference). Otherwise call Apify through the workspace's Apify connection, following that connection's own
 instructions for requests. If it lets you set headers, send
 `User-Agent: apify-replit-growth-kit/competitor-teardown` so runs from Replit can be counted. If run starts
 fail while reads work, follow "When run starts fail" in the runtime reference.

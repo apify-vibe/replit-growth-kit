@@ -8,8 +8,9 @@ every skill in the Growth Kit set.
 The Replit workspace Apify integration is non-OAuth, so every member of the workspace runs against
 the admin's API key. Two consequences.
 
-- **A builder can spend someone else's credit.** That is why every skill gates before a paid step
-  and shows the expected item count first. Never batch several paid steps behind one gate.
+- **A builder can spend someone else's credit.** That is why every skill asks for one spend
+  budget before the first paid run, listing every step with its Actors and expected item count,
+  and asks again before going past it or changing the plan.
 - **Runs are hard to attribute.** Set `User-Agent: apify-replit-growth-kit/<skill-name>` on every
   API call so a run can be traced back to the skill that started it.
 
