@@ -827,37 +827,61 @@
     "skill": "competitor-teardown",
     "fit": "edge",
     "notes": [],
-    "files_missing": [
-      "competitor-teardown.md",
-      "pricing-comparison.csv",
-      "competitor-reviews.csv",
-      "competitor-signals.csv"
-    ],
-    "runs_verified": 19,
-    "runs_listed": 19,
-    "cost_usd": 0.5593,
+    "files_missing": [],
+    "runs_verified": 48,
+    "runs_listed": 48,
+    "cost_usd": 0.9634,
     "ungated_runs": [
       "03aEQr7ETRlhQEZVj",
       "4ZMojOUwT62PnrAQW",
       "UtIgQBjRhHcQz50yN",
-      "da7nO1LoTu3SzLZKt",
-      "8NOEVmj7DJdg0b3rV",
       "cV15dT12euUVIw4y5",
       "RdiGkk6OGxc8zT1Sp",
+      "8NOEVmj7DJdg0b3rV",
+      "da7nO1LoTu3SzLZKt",
       "3NrFfdVwaG7WHOyXu",
       "VcSrbeD4rEisnBTPe",
-      "kMASnuKkUj1JxJbkX",
-      "EM1vXHK06CNdOb9ud",
-      "dSGftpoedY0DBAGPf",
       "SNqcdcDOOhxS3gGWa",
+      "EM1vXHK06CNdOb9ud",
+      "kMASnuKkUj1JxJbkX",
+      "dSGftpoedY0DBAGPf",
+      "6TbM9bpjLsqPpvl2d",
       "cH40riaEpdI7cCzLG",
       "gvLKfTRU4tzl2NBnb",
       "5PcSnvEkEH1aV1RWA",
       "4puBB0YZ2RzIHTYnt",
+      "yqisa3tWnvUE3P69u",
       "KTZawvtPCSAfgZzmT",
-      "yqisa3tWnvUE3P69u"
+      "ALjiZycYkPJ5s9gzP",
+      "g7Azc0Tp1VMaKleDQ",
+      "X6lVwRIPPS0OBcrgN",
+      "HWnFTRaX43HFzm7uW",
+      "YgrrptIiQ1A9gKaku",
+      "Xry6MkXnvgx2H4SWb",
+      "XtAx83RortAjaJb4O",
+      "BFkNiv37Pq6Wus1TA",
+      "Id0Q2wF77DQMPFxlL",
+      "HeGFi1mD64kNsGPS4",
+      "glRJWO95mfcphZsdD",
+      "JsK6IfrNKPe0oc6Wn",
+      "DPf7k6vA5Azu8aBSt",
+      "PslLCUzoyShzaX2ND",
+      "zniS4anYDBshZ3h53",
+      "dp8cA9dKWnwWM8k9N",
+      "y1z4fMcrSBvwHevih",
+      "haWKx1b0SdXisZwbX",
+      "L2NUYRN2387hKgGkQ",
+      "ohcE1TcTCnnqiQmL9",
+      "G0BvTHtwJo3Ol1fGz",
+      "oel5ov8Wk4olY7waw",
+      "kenuT8PhYIP133qGw",
+      "qJjrWqSEUxWjSubFk",
+      "l3nKRvpLt1uYe9uBW",
+      "fn8jJvF2PEUDuGQyQ",
+      "M0AtH4qpxmpAS2UHg",
+      "qtB7rMnkiSKDzg16v"
     ],
-    "ua_attributed": "19/19",
+    "ua_attributed": "48/48",
     "runs": [
       {
         "run": "03aEQr7ETRlhQEZVj",
@@ -878,18 +902,6 @@
         "ua": "apify-replit-growth-kit/competitor-teardown"
       },
       {
-        "run": "da7nO1LoTu3SzLZKt",
-        "status": "SUCCEEDED",
-        "usd": 0.0123,
-        "ua": "apify-replit-growth-kit/competitor-teardown"
-      },
-      {
-        "run": "8NOEVmj7DJdg0b3rV",
-        "status": "SUCCEEDED",
-        "usd": 0.0149,
-        "ua": "apify-replit-growth-kit/competitor-teardown"
-      },
-      {
         "run": "cV15dT12euUVIw4y5",
         "status": "SUCCEEDED",
         "usd": 0.0151,
@@ -899,6 +911,18 @@
         "run": "RdiGkk6OGxc8zT1Sp",
         "status": "SUCCEEDED",
         "usd": 0.0189,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "8NOEVmj7DJdg0b3rV",
+        "status": "SUCCEEDED",
+        "usd": 0.0149,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "da7nO1LoTu3SzLZKt",
+        "status": "SUCCEEDED",
+        "usd": 0.0123,
         "ua": "apify-replit-growth-kit/competitor-teardown"
       },
       {
@@ -914,13 +938,19 @@
         "ua": "apify-replit-growth-kit/competitor-teardown"
       },
       {
-        "run": "kMASnuKkUj1JxJbkX",
+        "run": "SNqcdcDOOhxS3gGWa",
+        "status": "SUCCEEDED",
+        "usd": 0.044,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "EM1vXHK06CNdOb9ud",
         "status": "SUCCEEDED",
         "usd": 0.038,
         "ua": "apify-replit-growth-kit/competitor-teardown"
       },
       {
-        "run": "EM1vXHK06CNdOb9ud",
+        "run": "kMASnuKkUj1JxJbkX",
         "status": "SUCCEEDED",
         "usd": 0.038,
         "ua": "apify-replit-growth-kit/competitor-teardown"
@@ -932,9 +962,9 @@
         "ua": "apify-replit-growth-kit/competitor-teardown"
       },
       {
-        "run": "SNqcdcDOOhxS3gGWa",
+        "run": "6TbM9bpjLsqPpvl2d",
         "status": "SUCCEEDED",
-        "usd": 0.044,
+        "usd": 0.052,
         "ua": "apify-replit-growth-kit/competitor-teardown"
       },
       {
@@ -962,20 +992,195 @@
         "ua": "apify-replit-growth-kit/competitor-teardown"
       },
       {
+        "run": "yqisa3tWnvUE3P69u",
+        "status": "SUCCEEDED",
+        "usd": 0.044,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
         "run": "KTZawvtPCSAfgZzmT",
         "status": "SUCCEEDED",
         "usd": 0.038,
         "ua": "apify-replit-growth-kit/competitor-teardown"
       },
       {
-        "run": "yqisa3tWnvUE3P69u",
+        "run": "ALjiZycYkPJ5s9gzP",
         "status": "SUCCEEDED",
-        "usd": 0.044,
+        "usd": 0.0115,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "g7Azc0Tp1VMaKleDQ",
+        "status": "SUCCEEDED",
+        "usd": 0.005,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "X6lVwRIPPS0OBcrgN",
+        "status": "SUCCEEDED",
+        "usd": 0.005,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "HWnFTRaX43HFzm7uW",
+        "status": "SUCCEEDED",
+        "usd": 0.005,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "YgrrptIiQ1A9gKaku",
+        "status": "SUCCEEDED",
+        "usd": 0.0944,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "Xry6MkXnvgx2H4SWb",
+        "status": "SUCCEEDED",
+        "usd": 0.0181,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "XtAx83RortAjaJb4O",
+        "status": "SUCCEEDED",
+        "usd": 0.0181,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "BFkNiv37Pq6Wus1TA",
+        "status": "SUCCEEDED",
+        "usd": 0.0099,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "Id0Q2wF77DQMPFxlL",
+        "status": "SUCCEEDED",
+        "usd": 0.0181,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "HeGFi1mD64kNsGPS4",
+        "status": "SUCCEEDED",
+        "usd": 0.0081,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "glRJWO95mfcphZsdD",
+        "status": "SUCCEEDED",
+        "usd": 0.017,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "JsK6IfrNKPe0oc6Wn",
+        "status": "SUCCEEDED",
+        "usd": 0.0081,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "DPf7k6vA5Azu8aBSt",
+        "status": "SUCCEEDED",
+        "usd": 0.0081,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "PslLCUzoyShzaX2ND",
+        "status": "SUCCEEDED",
+        "usd": 0.017,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "zniS4anYDBshZ3h53",
+        "status": "SUCCEEDED",
+        "usd": 0.017,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "dp8cA9dKWnwWM8k9N",
+        "status": "SUCCEEDED",
+        "usd": 0.017,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "y1z4fMcrSBvwHevih",
+        "status": "SUCCEEDED",
+        "usd": 0.0081,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "haWKx1b0SdXisZwbX",
+        "status": "SUCCEEDED",
+        "usd": 0.0147,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "L2NUYRN2387hKgGkQ",
+        "status": "SUCCEEDED",
+        "usd": 0.0021,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "ohcE1TcTCnnqiQmL9",
+        "status": "SUCCEEDED",
+        "usd": 0.0083,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "G0BvTHtwJo3Ol1fGz",
+        "status": "SUCCEEDED",
+        "usd": 0.0021,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "oel5ov8Wk4olY7waw",
+        "status": "SUCCEEDED",
+        "usd": 0.001,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "kenuT8PhYIP133qGw",
+        "status": "SUCCEEDED",
+        "usd": 0.001,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "qJjrWqSEUxWjSubFk",
+        "status": "SUCCEEDED",
+        "usd": 0.001,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "l3nKRvpLt1uYe9uBW",
+        "status": "SUCCEEDED",
+        "usd": 0.001,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "fn8jJvF2PEUDuGQyQ",
+        "status": "SUCCEEDED",
+        "usd": 0.0087,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "M0AtH4qpxmpAS2UHg",
+        "status": "SUCCEEDED",
+        "usd": 0.012,
+        "ua": "apify-replit-growth-kit/competitor-teardown"
+      },
+      {
+        "run": "qtB7rMnkiSKDzg16v",
+        "status": "SUCCEEDED",
+        "usd": 0.0147,
         "ua": "apify-replit-growth-kit/competitor-teardown"
       }
     ],
-    "main_rows": 0,
-    "G6_rows_ok": false
+    "main_rows": 403,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
   },
   {
     "id": "creator-good-tiktok",
