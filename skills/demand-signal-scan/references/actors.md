@@ -96,8 +96,11 @@ URLs found with `streamers/youtube-scraper`.
 For developer and technical audiences. Tested 2026-10-04 (100% success, $0.005 per story).
 
 ```json
-{"query":"uptime monitoring","maxResults":30,"tags":"comment","dateFrom":"2026-01-01"}
+{"query":"\"uptimerobot\" monitoring","maxResults":30,"tags":"comment","dateFrom":"2026-01-01"}
 ```
+
+Search matches loosely ("pingdom" matched "kingdom"): quote names and add the category word. Sort
+by relevance with a date floor; date sort alone returned the newest posts site-wide.
 
 Comment search (`tags: comment`) was the productive mode for developer pain; story search by date
 returns many rows with `title: null` (comments typed as results) and "who wants to be hired" posts.
@@ -146,8 +149,8 @@ top tier, $0.012 on FREE):
 
 `geo` and `language` accept names or codes. Output from Google Ads Keyword Planner:
 `search_volume` (monthly average, bucketed), `monthly_searches` (an array of
-`{year, month, monthly_searches}` objects), `cpc` (an advertiser bid estimate, not an average
-cost), `competition`. Volumes under about 10 come back as 10 with a null CPC, and some phrases
+`{year, month, monthly_searches}` objects), `cpc` (average cost per click), `low_top_of_page_bid`
+and `high_top_of_page_bid` (the bid range), `competition`. Volumes under about 10 come back as 10 with a null CPC, and some phrases
 come back with every field null and are still billed: both mean "not measured". Apostrophes are
 stripped ("doesn't" becomes "doesn t") and break the phrase; rephrase without them. The 12-month series can spike (60,500 one month against 2,400 to 9,900 otherwise):
 report the median month, not only the headline. `aiVolume: true` bills a second event; leave it
@@ -168,8 +171,8 @@ phrase; this route was not live-tested, so the pilot decides), then read their c
 {"posts":["https://www.linkedin.com/posts/..."],"maxItems":50,"scrapeReplies":true,"profileScraperMode":"short"}
 ```
 
-The input `maxItems` applies per post; set the run option `maxItems` to posts × that, or it
-truncates. Replies are not billed. Each comment carries `commentary`, `createdAt` (absolute),
+Run one post per run: in testing the input `maxItems` acted as a cap for the whole run, and the
+second post was never scraped. Replies are not billed. Each comment carries `commentary`, `createdAt` (absolute),
 `actor.name`, `actor.position` (headline: separates practitioners from vendors, about 8 of 10 in a
 sample) and, when present, `replies[]` one level deep (the key is missing on comments without
 replies). Keep `profileScraperMode: "short"`; other modes bill a
@@ -224,7 +227,8 @@ One competitor's repo, only when it is open source and competes on the same job:
 {"url":"https://api.stackexchange.com/2.3/search?order=desc&sort=relevance&intitle=uptime+monitoring&tagged=monitoring&site=stackoverflow&pagesize=30&filter=withbody","formats":["text"]}
 ```
 
-Stack Overflow's `q` parameter matches every word in the body (a multi-word `q` plus a tag
+Add `fromdate` (Unix seconds, about two years back): without it the example returned mostly 2016-era
+questions. Stack Overflow's `q` parameter matches every word in the body (a multi-word `q` plus a tag
 returned 0 results and still billed); `intitle` is the reliable search.
 
 The JSON arrives as a string in `text`; parse it. Bodies arrive as HTML: decode entities before

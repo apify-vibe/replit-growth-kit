@@ -21,7 +21,7 @@ decay silently, and say little about whether an audience acts. A creator with 20
 fee. These are comparison signals, not guarantees of installs.
 
 **Read first:** [references/replit-runtime.md](references/replit-runtime.md) for connecting to
-Apify, the one-budget-per-job rule and the $0.50 run-cap floor, pilots and evidence rules. Actor inputs and traps are in
+Apify, the one-budget-per-job rule and run caps, pilots and evidence rules. Actor inputs and traps are in
 [references/actors.md](references/actors.md).
 
 ## Actors and attribution
@@ -70,7 +70,8 @@ video. UGC sells a visible before-and-after, so a product that saves an afternoo
 hook from one that makes a chart appear.
 
 Write the niche as an audience, not a category: "freelance designers who hate invoicing" is
-searchable on TikTok, "invoicing SaaS" is not. Show it to the builder and let them correct it once.
+searchable on TikTok, "invoicing SaaS" is not. Judge fit (step 2) first; once a track fits, show
+the summary and the niche to the builder and let them correct them once.
 
 ### 2. Judge fit and pick the track
 
@@ -137,8 +138,9 @@ actually making that content. Profile search returns brands and dormant accounts
   tiny accounts (1 of 27 in band). Never use the general scraper's `search` + `searchType:
   "hashtag"` mode: it returns hashtag metadata, not posts.
 - **YouTube:** video search for the audience's topics, sorted by relevance, within the last year.
-- **X:** tweet search with the audience's phrases in quotes and `minimumFavorites` set; unquoted
-  words return unrelated posts.
+- **X:** tweet search with the audience's phrases in quotes, `minimumFavorites` set and a `start`
+  date about 90 days back; unquoted words return unrelated posts, and without a date window half
+  the results predated the year.
 - **LinkedIn:** post search, phrases in quotes, sorted by relevance, last month. Drop company
   pages and job ads: about half of a relevance-sorted sample were hiring posts.
 - **Newsletters:** one search step, `site:substack.com <niche> newsletter` plus the niche's own
@@ -156,8 +158,9 @@ vendors posting about their own product do not. For newsletters and podcasts, th
 about the niche and is run by a person or a small team, not a vendor. Count authors, not posts, and use
 the pilot bar and one-rewrite rule from the runtime reference. Then scale to about 3 terms × 30
 posts per platform. Collect the authors, drop brands and off-niche accounts, and keep up to 40 per
-platform for step 5. Instagram and TikTok search results carry no follower count, so the band is
-applied in step 5.
+platform for step 5, choosing the authors with the most on-niche posts first, then the most recent.
+TikTok and X search results carry follower counts: apply the band before step 5. Instagram and
+LinkedIn search results do not, so the band is applied in step 5.
 
 ### 5. Pull recent posts for survivors (paid)
 
@@ -170,16 +173,17 @@ Only now pay per profile, and only for the survivors:
   `excludePinnedPosts: true`. Pinned videos still leak through, so drop any with `isPinned: true`
   yourself.
 - **YouTube:** `streamers/youtube-scraper` with the channel URLs, 12 latest videos each. It
-  returns per-video likes, comments and views. (The channel scraper returns neither likes nor
-  comment counts, so engagement cannot be computed from it.)
+  returns per-video likes, comments and views, not in date order: sort by date first. (The channel
+  scraper returns neither likes nor comment counts, so engagement cannot be computed from it.)
 - **X:** `apidojo/tweet-scraper` with `from:<handle> -filter:replies -filter:nativeretweets`,
   sorted `Latest`, 12 posts per handle, one handle per run (`maxItems` caps the whole run, not each
   search term). That form drops replies and retweets; the handle mode
   keeps retweets.
-- **LinkedIn:** `harvestapi/linkedin-profile-posts`, 12 posts per profile with reposts off, then
-  `harvestapi/linkedin-profile-scraper` for `followerCount` (post output carries none). Keep a post
-  only when its author is the creator and it is not a repost, and sort by date before taking 12:
-  the output is not in date order.
+- **LinkedIn:** first `harvestapi/linkedin-profile-scraper` for `followerCount` (search output
+  carries none), and drop authors below the band; then `harvestapi/linkedin-profile-posts`, 12 posts
+  per remaining profile with reposts off. Keep a post only when its author is the creator and it is
+  not a repost (`repostedBy` set or another author), and sort by date before taking 12: the output
+  is not in date order. Pulling posts first paid for 6 of 40 creators who were below the band.
 - **Newsletters:** `automation-lab/substack-scraper` with the publication URLs, 12 posts each,
   publication info on, content off (titles are enough for the sponsor check and cost half).
 - **Podcasts:** `sourabhbgp/apple-podcast-scraper` in `podcast` mode with RSS enrichment on and
@@ -213,7 +217,8 @@ show percentages in the report.
 **Flags.** Each of these sends a creator to the rejected list with the reason. They are warning
 signs, not proof:
 
-- Dormant: fewer than 3 posts in the last 60 days on TikTok, Instagram, X and LinkedIn; fewer than
+- Dormant (the 60 days include today): fewer than 3 posts in the last 60 days on TikTok,
+  Instagram, X and LinkedIn; fewer than
   2 on YouTube, where long videos come every two to four weeks (the 3-post rule rejected an
   82,000-subscriber channel posting twice a month).
 - Under 1% engagement with over 50,000 followers: audience not engaging, possibly bought.
@@ -244,17 +249,18 @@ publish no audience number. Score each 0 to 100 from what the data shows, and wr
 | Niche overlap | 30 | 3 or more of the last 12 posts or episodes are about the niche |
 | Active | 20 | 2 or more posts or episodes in the last 60 days, from their dates (not the feed's frequency label) |
 | Audience | 20 | Newsletter: `subscriberCount` at or above the band's floor. Podcast: an Apple rating with 20+ reviews, or a chart rank |
-| Takes sponsors | 15 | A sponsor or product deal named in post titles or episode descriptions, or an advertise or sponsor page on the publication's own site |
+| Takes sponsors | 15 | A sponsor or product deal named in post titles, or in full episode notes from the show's RSS feed |
 | Published contact | 15 | An owner or sponsorship email in the feed or on the site, or a contact page |
 
 Score only over components that have evidence, and show it: "70 of 80 available" when the
 subscriber count is hidden (half the Substack lists hid it in testing) or a small podcast has no
 Apple rating. Missing is not bad. Fewer than 2 posts or episodes in the last 60 days is dormant:
-reject. Substack reports subscribers as a rounded string ("74,000"); keep it as text. A keyword
-scan for "sponsored by" in post bodies missed a sponsored post in testing, so "takes sponsors"
-needs a named deal or an advertise page. Substack's own output exposes neither: check the
-publication's `/advertise` or `/sponsor` page with the contact step. The score orders the list;
-its weights were never measured against outcomes.
+reject. Substack reports subscribers as a rounded string ("74,000"); keep it as text. "Takes
+sponsors" is usually unmeasurable: Substack serves a page at every `/advertise` URL whether or not
+the newsletter sells ads, and podcast descriptions arrive cut at about 250 characters. Count it only
+on evidence (a named deal in a post title, or a sponsor read in the full notes fetched from the
+show's RSS feed with `apify/web-fetch`); otherwise it is unavailable, not zero. The score orders
+the list; its weights were never measured against outcomes.
 
 **Contacts.** Take only a business email the creator published: in the bio or post captions you
 already have, or on their own linked website. For the linked sites, run one
@@ -262,7 +268,8 @@ already have, or on their own linked website. For the linked sites, run one
 `maxDepth: 1` and `sameDomain: true`; YouTube's about-page email sits behind a sign-in, so the
 linked site is the reliable route. Skip creators who already show an email. Use the creator's own
 domain, not affiliate, sponsor or course-funnel links; for newsletters, the publication's About
-and Advertise pages. Link-in-bio pages (Linktree, Beacons) and newsletter platforms leak other
+page or the author's own site only: `sameDomain` treats all of Substack as one site, and addresses
+printed inside posts (job listings, guests) belong to other people. Link-in-bio pages (Linktree, Beacons) and newsletter platforms leak other
 brands' and the platform's own addresses into the results even with `sameDomain`: apply the
 own-domain rule in the runtime reference before keeping any address. A Gmail-style address the
 creator published under "work with me" counts. Stop there. Never guess an address from a name, and never hunt for a
@@ -275,8 +282,10 @@ recent post shows the format to brief.
 
 If fewer than 15 creators survive, run one widening pass (put it in the budget form as a
 conditional line) with two or three adjacent audience terms before delivering a short list, and
-say in the report that the niche is thin. If more than 30 survive, keep the top 30 by ranking and
-list the rest as overflow. A builder who asks for creators "with an email" gets those first; the
+say in the report that the niche is thin. If more than 30 in-band creators survive, keep the top 30
+by ranking, split across platforms in proportion to their survivors, and list the rest with status
+`overflow`. Creators above the band do not take one of the 30: list them in a separate "likely
+above budget" group. A builder who asks for creators "with an email" gets those first; the
 others follow, labelled, unless the builder says email is required.
 
 Rank creators by median engagement within each platform, and newsletters and podcasts by sponsor
@@ -296,7 +305,7 @@ header, the report explains why it is short):
   `engagement_rate_median`, `engagement_min`, `engagement_max`, `posts_used`, `posts_last_60d`,
   `sponsored_share` (blank where the platform has no paid-partnership flag), `contact_email`,
   `contact_source`, `top_post_url`, `fit_note`, `status`
-  (`shortlisted` or `rejected`), `reject_reason`, `source_actor`, `source_run_id`.
+  (`shortlisted`, `overflow`, `above_band` or `rejected`), `reject_reason`, `source_actor`, `source_run_id`.
 - `creator-shortlist.md`: the 15 to 30 keepers grouped by track and platform, creators ranked by
   engagement and newsletters and podcasts by sponsor fit, with
   the per-post numbers for each so a human can check the maths; then the rejected creators with

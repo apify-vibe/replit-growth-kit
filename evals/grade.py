@@ -64,9 +64,10 @@ def grade(case, rdir):
         datasets[rid] = d.get('defaultDatasetId')
     res.update(runs_verified=len(verified), runs_listed=len(runs), cost_usd=round(cost, 4), ungated_runs=ungated,
                ua_attributed=f'{ua_ok}/{len(verified)}', runs=verified)
-    # G2 mechanical part: bad-fit cases must have zero collection runs (one probe allowed for demand)
+    # G2 mechanical part: bad-fit cases must have zero collection runs. Demand may run its probe plus
+    # one search-volume run (acceptance.md amendment 2026-10-05); neither collects signals.
     if fit == 'bad':
-        allowed = 1 if skill == 'demand-signal-scan' else 0
+        allowed = 2 if skill == 'demand-signal-scan' else 0
         res['G2_runs_ok'] = len(verified) <= allowed
     # G5/G6 on the main CSV
     p = os.path.join(cdir, main_csv); rows = []

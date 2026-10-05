@@ -34,6 +34,13 @@ never taken from the subject's own claims.
 | Cases | 3 of 3 cases pass (2 good-fit, 1 bad-fit or edge) |
 | Replit runtime | 1 acceptance run inside Replit: Agent selects the skill from a plain request, Apify auth works through the workspace, run IDs resolve in Apify Console |
 
+## Amendments
+
+- **2026-10-05, G2 (Lukas):** a bad-fit demand-signal-scan case may run its probe plus one
+  search-volume run. Neither collects signals; the volume number is the one useful output of a
+  stopped scan. Round v13's `demand-bad-private` ran a second volume run and stays recorded as a G2
+  failure under the rule it ran against.
+
 ## Stop rule
 
 Each skill gets at most two fix rounds after round 1. A skill that still fails parks to v2 with

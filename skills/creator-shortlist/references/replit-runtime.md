@@ -29,8 +29,9 @@ Apify facts that hold for any interface:
 - Start a run with `POST /v2/acts/<owner>~<name>/runs`, run options in the query
   (`maxItems`, `maxTotalChargeUsd`), and the Actor input as a JSON **object**.
 - Before the first paid step, make one `GET /v2/users/me`. It proves the connection works and
-  gives the account tier for pricing (section 2). A job that stops at a free fit check needs no
-  call at all.
+  gives the account tier for pricing (section 2). Read only `plan.tier` from it: the response also
+  holds the account's proxy password, so never print, log or save the response. A job that stops
+  at a free fit check needs no call at all.
 - If the interface lets you set headers, send `User-Agent: apify-replit-growth-kit/<skill-name>`
   on every request so Apify can count runs that come from Replit. If it doesn't, skip it.
 
@@ -85,16 +86,22 @@ A pilot rewrite, a scale-up within twice the form's numbers, and a cap retry (be
 plan. Report each step's runs and spend in chat as you go, so the builder can stop the job at any
 point. Confirmations that cost nothing (the product summary, the competitor shortlist, the angles
 to cover) are ordinary questions, not spend forms. When the builder names the platforms or sources
-to use, those are the plan; suggest one more from the skill's table only as a free question.
+to use, those are the plan; suggest one more from the skill's table only as a free question. If
+the named sources fail their pilots, offer the strongest other source once, as a plan change.
 
-**Caps on every run.** Set the API run option `maxTotalChargeUsd` to **at least $0.50**, or twice
-the run's estimated cost when that is higher. It is a ceiling, not a charge: several Actors refuse
-a cap below their own minimum ($0.25 to $0.50), and a run that hits its cap stops with partial
-data. The caps of all runs in flight at once, plus what has already been spent, must stay within
-the approved budget. When less than $0.50 of budget remains, use what remains if the Actor accepts
-it; if the Actor's minimum is higher, that is a new form. Bound the work itself with `maxItems` and
-the Actor's own result or page caps, because several Actors default those to 1,000 or more and a
-few ignore `maxItems`. A `FREE` Actor still costs platform usage, so it counts against the budget.
+**Caps on every run.** Set the API run option `maxTotalChargeUsd` to twice the run's estimated
+cost, and never below the Actor's own minimum: several Actors refuse a lower cap
+(`max-total-charge-usd-below-minimum`, $0.25 to $0.50), and a run that hits its cap stops with
+partial data. When you do not know the minimum, use $0.50. It is a ceiling, not a charge. Keep the
+**estimated** cost of runs in flight, plus what has been spent, within the approved budget; caps can
+add up past it, because few runs spend their cap. Bound the work itself with `maxItems` and the
+Actor's own result or page caps, because several Actors default those to 1,000 or more and a few
+ignore `maxItems`.
+
+`maxTotalChargeUsd` only bounds pay-per-event charges. Actors billed on platform usage (for
+example `apify/website-content-crawler`) ignore it: bound them with page caps, a run `timeout` and
+`memory`, and expect proxy charges (residential proxy especially) to keep arriving for a while
+after the run ends.
 
 **Cap retry.** If a launch is refused for its cap (`max-total-charge-usd-below-minimum`), relaunch
 once with the minimum the error names. If a run stops on its charge limit, keep its dataset and
@@ -105,13 +112,16 @@ Running the step:
 - Launch each run, then poll the run until it reaches a terminal status (`SUCCEEDED`, `FAILED`,
   `TIMED-OUT`, `ABORTED`). A wait that returns while the run is still `READY` or `RUNNING` is not a
   result.
-- If a launch call errors, list the Actor's runs from the last few minutes before trying again,
-  and match on the run's input as well as its start time: other jobs may share the account. Reuse
-  a matching run instead of paying twice.
+- If a launch call errors (including a connection dropped mid-response), list the Actor's runs from
+  the last few minutes before trying again, and match on the run's input as well as its start
+  time: other jobs may share the account. Apify stores the input with the Actor's defaults added,
+  so compare the fields you sent, not the whole record. Reuse a matching run instead of paying
+  twice.
 - Run browser crawls and Reddit jobs one after another, not all at once. Parallel crawls can
   exhaust the account's memory (HTTP 402) and parallel Reddit jobs get rate limited.
 - Cost counters lag by up to a few minutes after a run finishes: the first read often shows only
-  the start fee. Re-read until two reads at least 30 seconds apart agree before recording cost.
+  the start fee. Re-read until two reads at least 30 seconds apart agree before recording cost,
+  and read usage-billed runs once more at the end of the job.
   Read the item count from the dataset (`GET /v2/datasets/<id>` → `itemCount`) when the run's own
   count is empty.
 
@@ -126,7 +136,9 @@ Rules that make the budget mean something:
 ## 4. Pilot uncertain lanes
 
 When a search might return off-target rows (keyword discovery, new communities, a new country),
-run a 10 to 20 unit pilot first, as its own line in the budget. Before it runs, write down what
+run a 10 to 20 unit pilot first, as its own line in the budget. Pilot every search term the plan
+will scale, a few units each, not only the first: untested terms were the most common waste at
+scale. Choosing or swapping terms after the pilot, inside a budget line, is not a plan change. Before it runs, write down what
 counts as relevant. Then count:
 
 - **Unit:** count threads, companies, creators or reviews, not raw rows. A Reddit post with its
@@ -159,9 +171,12 @@ Scale a passing pilot up to the scale shown in the form; up to twice that is sti
 - Never invent an email, name, price, date, follower count or URL to fill a column. Leave it blank.
 - A timed-out run with rows is partial coverage. Pull its dataset before considering a retry.
 - **Builders posing as users.** In founder-heavy communities many first-person posts are product
-  research or launches. Read the full post before counting or quoting it: a later "would you use
-  something like this?", an EDIT announcing a launch, or a product link marks a builder. Builders
-  are competitors, not evidence of demand.
+  research or launches (a third or more of posts in some habit and freelance subreddits). Read the
+  full post before counting or quoting it: a later "would you use something like this?", an EDIT
+  announcing a launch, a product link, or the same author admitting to building an app in another
+  post marks a builder. Builders are competitors, not evidence of demand.
+- **Search operators stay bare.** Adding words to a Google `site:` query made Google drop the
+  operator, and the run still reported success with 0 results. Use `site:<domain> <one phrase>`.
 - **Emails: own domain only.** Keep an email only when it sits on the person's or business's own
   domain, or appears in their own bio or profile text. Drop addresses of the platform a page is
   hosted on (Substack, Linktree, Beacons, website builders), of brands linked from a bio page,
