@@ -126,7 +126,7 @@ FREE) charged whole per 25 profiles, so pilot with exactly one page.
 | `currentJobTitles` | array | The title filter (`searchQuery` is fuzzy text, not a filter) |
 | `locations` | array | Plain text. Use `"United Kingdom"`, not `"UK"` (resolves to Ukraine). |
 | `currentCompanies` | array | Full LinkedIn company URLs |
-| `companyHeadcount` | array | LinkedIn size letters: A self-employed, B 1-10, C 11-50, D 51-200, E 201-500, F 501-1,000, G 1,001-5,000, H 5,001-10,000, I 10,001+ |
+| `companyHeadcount` | array | LinkedIn size letters: A self-employed, B 1-10, C 11-50, D 51-200, E 201-500, F 501-1,000, G 1,001-5,000, H 5,001-10,000, I 10,001+. Approximate: in a Replit test 22 of 50 rows sat outside the requested letter, so read size from the row's `employeeCountRange` |
 | `companyHeadquarterLocations` | array | Company HQ location, plain text; use it instead of a separate HQ lookup |
 | `industryIds` | array | Filters the **person's** industry, not the company's: in testing it let energy, robotics and insurance firms through |
 | `maxItems`, `takePages` | integer | Set both |

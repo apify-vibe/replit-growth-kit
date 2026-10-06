@@ -44,7 +44,7 @@ skill says so up front.
 > their LinkedIn profile and a work email.
 
 *Expect:* people search by job title (database or live LinkedIn), headquarters filtered at search
-time, every email verified, a LinkedIn URL on each row.
+time, every email verified at the source or by the verifier, a LinkedIn URL on each row.
 
 **3. Enrich a list of websites.**
 > There's no app in this workspace yet, so don't build anything: use this description as my

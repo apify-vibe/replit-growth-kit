@@ -204,8 +204,8 @@ Same Actors as the competitor teardown; pull 1 to 2 star reviews from the last 1
 
 | Source | Actor | Low-star input |
 |---|---|---|
-| Capterra | `zen-studio/capterra-reviews-scraper` | `"starRating":["1","2"],"sort":"LOWEST_RATED"`; one product per run, `productUrl` of the form `https://www.capterra.com/p/<id>/<slug>/reviews/` (find it with a search); no date filter |
-| G2 | `automation-lab/g2-scraper` | `"sortReviews":"rating_low"` plus `publishedAfter`; `minRating` is an NPS floor, not stars |
+| Capterra | `zen-studio/capterra-reviews-scraper` | `"starRating":["1","2"],"sort":"LOWEST_RATED"`; one product per run, `productUrl` of the form `https://www.capterra.com/p/<id>/<slug>/reviews/` (find it with a search); no date filter. A text field whose whole value is `$<digit>` (`$2`, `$3`) is an Actor defect: treat that field as missing, and do not quote the review's other fields as counterevidence |
+| G2 | `automation-lab/g2-scraper` | No reliable low-star sort (its rating sort returned 3 low-star reviews in 69): fetch `"sortReviews":"newest"` with `publishedAfter` and keep 1 and 2 stars yourself; `minRating` is an NPS floor, not stars |
 | App Store | `thewolves/appstore-reviews-scraper` | No rating filter: fetch about 10x and keep `score` 1 to 2 ($0.0001 each) |
 | Google Play | `thewolves/google-play-reviews-scraper` | `sort: "RATING"` returns 5-star first: fetch `NEWEST`, about 10x, keep `score` 1 to 2. Needs the real package name. |
 

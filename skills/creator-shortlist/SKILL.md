@@ -159,8 +159,11 @@ about the niche and is run by a person or a small team, not a vendor. Count auth
 the pilot bar and one-rewrite rule from the runtime reference. Then scale to about 3 terms × 30
 posts per platform. Collect the authors, drop brands and off-niche accounts, and keep up to 40 per
 platform for step 5, choosing the authors with the most on-niche posts first, then the most recent.
-TikTok and X search results carry follower counts: apply the band before step 5. Instagram and
-LinkedIn search results do not, so the band is applied in step 5.
+TikTok and X search results carry follower counts, so apply the band before step 5: drop authors
+below it, and list authors above it with status `above_band` (using the search row's follower
+count) without paying for their posts. Instagram and LinkedIn search results carry no follower
+count, so the band is applied in step 5. A creator found above the band there also gets
+`above_band`, unless a rejection flag below applies; then `rejected` wins.
 
 ### 5. Pull recent posts for survivors (paid)
 
@@ -235,10 +238,15 @@ signs, not proof:
 - Off-niche: fewer than 3 of their last 12 posts are about the niche, judged from captions and
   hashtags.
 
-**Send to review, not rejection:** Instagram accounts with comments under roughly 1 per 200 likes
-on posts above 1,000 likes, a possible engagement pod. Reels that reach Explore draw likes without
-comments, so this rejected strong accounts in testing; show the ratio and let the builder decide.
-Do not apply it to TikTok, where comment ratios run naturally lower.
+**Send to review, not rejection** (status `review`, the reason in `reject_reason`; review rows do
+not count toward the 15 to 30):
+- Instagram accounts with comments under roughly 1 per 200 likes on posts above 1,000 likes, a
+  possible engagement pod. Reels that reach Explore draw likes without comments, so this rejected
+  strong accounts in testing; show the ratio and let the builder decide. Do not apply it to
+  TikTok, where comment ratios run naturally lower.
+- A bio or recent caption stating the creator is under 18: reason "minor: guardian consent and
+  platform rules apply". Student and study niches surface minors (the top-ranked creator in one
+  test was 17). Never rank a minor first.
 
 **Newsletters and podcasts: sponsor fit, not engagement.** Neither returns per-post engagement
 worth ranking on (a 74,000-subscriber newsletter showed 2 to 27 reactions per post), and podcasts
@@ -285,11 +293,14 @@ conditional line) with two or three adjacent audience terms before delivering a 
 say in the report that the niche is thin. If more than 30 in-band creators survive, keep the top 30
 by ranking, split across platforms in proportion to their survivors, and list the rest with status
 `overflow`. Creators above the band do not take one of the 30: list them in a separate "likely
-above budget" group. A builder who asks for creators "with an email" gets those first; the
+above budget" group with status `above_band`. A builder who asks for creators "with an email"
+gets those first; the
 others follow, labelled, unless the builder says email is required.
 
 Rank creators by median engagement within each platform, and newsletters and podcasts by sponsor
-fit. Reference bands for 10K to 100K accounts, for orientation only: TikTok healthy above 6%,
+fit. Reference bands rank and annotate; they never reject, and only the flags in this step send a
+creator to `rejected`. A builder asking for "good engagement" gets the list ranked by it, with the
+band shown. Reference bands for 10K to 100K accounts, for orientation only: TikTok healthy above 6%,
 strong above 12% (play-based rates run high); Instagram healthy above 3%, strong above 6%; YouTube
 healthy above 2%. X and LinkedIn have no measured reference band yet: rank within the platform
 and say so.
@@ -305,10 +316,11 @@ header, the report explains why it is short):
   `engagement_rate_median`, `engagement_min`, `engagement_max`, `posts_used`, `posts_last_60d`,
   `sponsored_share` (blank where the platform has no paid-partnership flag), `contact_email`,
   `contact_source`, `top_post_url`, `fit_note`, `status`
-  (`shortlisted`, `overflow`, `above_band` or `rejected`), `reject_reason`, `source_actor`, `source_run_id`.
+  (`shortlisted`, `overflow`, `above_band`, `review` or `rejected`), `reject_reason`, `source_actor`, `source_run_id`.
 - `creator-shortlist.md`: the 15 to 30 keepers grouped by track and platform, creators ranked by
   engagement and newsletters and podcasts by sponsor fit, with
-  the per-post numbers for each so a human can check the maths; then the rejected creators with
+  the per-post numbers for each so a human can check the maths; then the `review` and
+  "likely above budget" groups; then the rejected creators with
   their reasons, so the builder knows why an account they recognise is missing.
 
 - `growth-kit-approvals.jsonl`: written once a budget form was shown (runtime reference,

@@ -135,7 +135,9 @@ plus the category's plain name ("staff scheduling app"):
 
 Say plainly in the report what this is: interest in the problem and the category, not demand for
 this app. `cpc` is the average cost per click advertisers pay; `high_top_of_page_bid` is the top
-of the bid range. A high value signals a paying and crowded market.
+of the bid range. Both are in USD, and `cpc` can exceed `high_top_of_page_bid` (normal Keyword
+Planner behaviour): report `cpc` as it comes without doubting it. A high value signals a paying
+and crowded market.
 
 ### 5. Pilot each source (paid)
 
@@ -175,8 +177,9 @@ Each source needs its own way in; use it for the pilot, not only for collection:
 - **Stack Overflow:** title search with a tag. It shows implementation problems more than missing
   tools; use it only when the pain is about building or running something, or the builder asks.
 
-If the only source the builder asked for fails its pilot twice, offer the strongest other source
-for this audience from the table (a plan change: a new form), rather than ending on a thin report.
+If every source the builder named fails its pilot, offer the strongest unnamed source for this
+audience from the table (Reddit for office-based B2B; a plan change, so a new form) before writing
+the report, rather than ending on a thin one.
 
 ### 6. Collect the sources that passed (paid)
 
@@ -201,6 +204,10 @@ Hacker News 30 threads; search 2 pages per phrase.
   you collected it rather than inventing a date.
 - **Incumbent reviews:** last 12 months. Capterra has no date filter: fetch lowest-rated, filter by
   date yourself, and widen to 24 months when the last 12 hold too few (say so in the report).
+- **GitHub issues:** for warm threads, rerun the query that passed the pilot with
+  `created:>=<90 days back>` and `sort=created`. Keep its problem words: a recency pass without
+  them returned bug reports that became half of one scan's quotes. Issues on a competitor's own
+  tracker are evidence, not warm threads: a reply there is a contribution to their project.
 
 ### 7. Extract quotes, rank communities, pick threads
 
@@ -208,7 +215,8 @@ Hacker News 30 threads; search 2 pages per phrase.
 states it; `signals.csv` keeps every verified row, not only those.
 Leave out builders promoting their own app; list those separately as competitors, which is useful
 too. Quote exactly, typos included, from text you fetched in full; a search snippet is a lead, not
-a quote. Decoding HTML entities and collapsing whitespace is fine; changing words is not. Keep the
+a quote. Decoding HTML entities and collapsing whitespace is fine; changing words is not. Attribute
+quotes by role ("HR generalist", "indie developer"), never by the person's name. Keep the
 link and the date of that exact post or comment (a thread's date does not date its replies). For
 comments without their own URL, link the video (YouTube: `watch?v=<videoId>&lc=<cid>`; TikTok: the
 video URL plus the comment's date). Do not tidy a quote into marketing language; the moment you do,

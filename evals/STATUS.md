@@ -1,6 +1,6 @@
 # Status: Replit Growth Kit skills
 
-_Last updated 2026-10-04 evening: lead engine v2 (branch `lead-engine-lanes`, PR #2). Earlier sections describe v1.1._
+_Last updated 2026-10-05: v1.5, the Replit QA fix pass (branch `v1.5-replit-qa`). Earlier sections describe older versions._
 
 ## Where things stood before tonight
 
@@ -204,6 +204,65 @@ v2 spend: survey $0.66 + evals $11.67 = **about $12.30**.
 - **Not yet evaluated:** the crawl-based owner-name step had one smoke test only (6 agency sites,
   team or about page reached on 5, $0.003). The v1.4 fix pass itself has not been re-run.
 - **v1.4 bundle:** staged in KV `wg0mG9VcKHRQ9d3Py`; zip and per-skill folders on the Desktop.
+
+## v1.5 (2026-10-05): Replit QA verdict and fixes
+
+**Replit QA of v1.4:** 8 real sessions in Replit, 2 per skill, 113 runs, $3.41 by the Apify API.
+Every run was checked against the API. Mechanics held: one spend form per job, no re-asks, runs
+started through the Apify MCP server, and every spot-checked row traced to its dataset. G1 could not
+be checked anywhere, because the opening turns were compacted before export.
+
+| Skill | Session | Result | Cost |
+|---|---|---|---|
+| Teardown | prompt #2 (consumer app, competitors named) | **G6 fail:** 2 competitors; the competitor search was skipped because the builder named them | $0.30 |
+| Teardown | prompt #1 (B2B, seeds) | pass; 5 competitors, 501 reviews. G3 at risk: the search was likely logged before the form | $0.84 |
+| Lead | prompt #2 (LinkedIn titles) | **G6 fail:** 5 leads. The headcount filter leaked (44% of rows outside the bucket), and "SaaS" had no evidence path | $0.50 |
+| Lead | prompt #1 (Maps) | pass; 15 leads | $0.36 |
+| Creator | prompt #1 (UGC) | pass; 16 shortlisted | $0.32 |
+| Creator | prompt #2 (B2B voices) | pass; 16 shortlisted. One run was mislabelled and a candidate lost; 10 runs were missing from the ledger | $0.69 |
+| Demand | old handover prompt (devtool) | pass; 18 quotes, all exact. The warm threads came from an unpiloted GitHub query | $0.09 |
+| Demand | old handover prompt (B2B HR) | pass; 10 quotes. No fallback was offered after both named sources failed | $0.31 |
+
+Cross-session findings:
+- The ledgers had no timestamps and were written out of order, so G3 could not be proven.
+- The tier was read through Replit's Apify connection (BRONZE) while the runs went through MCP (DIAMOND).
+- Usage-billed costs were reported as "unavailable".
+- The website crawler failed at 1024 MB in 2 of 2 teardowns.
+
+**v1.5 changes:**
+- **Shared runtime:**
+  - an append-only approvals ledger with `ts`, `event` and `run_ids` on every line, the form logged before the first run;
+  - tier from `fetch-actor-details` → `pricing.userTier` on MCP, never from another connection;
+  - exact or estimated cost per run, since MCP's `get-actor-run` returns no USD field;
+  - run labels taken from the stored input, plus a reconciliation against the account's run list before delivery;
+  - a fallback offer when every named source fails;
+  - `waitSecs` 30 or less;
+  - an inconclusive pilot uses the lane's one rewrite.
+- **Teardown:**
+  - the competitor search always runs, and only after the form;
+  - crawler `memory: 4096`;
+  - no G2 low-star run, and Capterra's low-star slice capped at 10;
+  - the numeric LinkedIn `companyId` for the hiring fallback.
+- **Lead:**
+  - the LinkedIn headcount filter is documented as approximate, with a company-first route;
+  - the rewrite rule;
+  - `job_title` from `jobTitle` plus `title_source`;
+  - no per-person code;
+  - a `run_metadata.json` skeleton.
+- **Creator:**
+  - `above_band` status before step 5;
+  - a `review` status for possible pods and minors (a 17-year-old ranked first in one session);
+  - reference bands never reject.
+- **Demand:**
+  - the GitHub recency pass keeps the passing query;
+  - the Capterra `$<digit>` defect is treated as missing;
+  - `cpc` above the high bid is normal;
+  - quotes are attributed by role.
+- **Docs:** lead prompt #2 now expects "verified at the source or by the verifier".
+
+**Not run:** no local eval round (Lukas, 2026-10-05). The check is a Replit rerun after merge:
+Teardown #2, Lead #2, Lead #3 and Demand #1 (the demand sessions above used the old prompts,
+so v1.4's Reddit path is still untested).
 
 ## Spend
 
