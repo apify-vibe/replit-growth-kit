@@ -92,3 +92,54 @@ cases:
     fit: bad
     request: "Find influencers to promote LedgerGuard."
     expect: "Stops before any paid run: enterprise procurement purchase, not UGC. Points to outbound skills."
+
+  # v2 lead-engine lanes (added 2026-10-04)
+  - id: lead-good-linkedin-title
+    skill: open-web-lead-engine
+    fixture: ledgerguard
+    fit: good
+    request: "Find CTOs and heads of engineering at 50 to 200 person SaaS companies in Germany that sell to enterprises. I need their LinkedIn and a work email."
+    anchors: "harvestapi/linkedin-profile-search 6.5K MCP users, harvestapi/linkedin-company-employees 3.5K, 'linkedin email' 1,097"
+
+  - id: lead-good-domains
+    skill: open-web-lead-engine
+    fixture: briefcraft-waitlist
+    fit: good
+    request: "Here are the domains from my waitlist (waitlist.csv). Pull the founder or owner contact from each website and verify the emails."
+    anchors: "vdrmota/contact-info-scraper 2.0K, 'email finder' 920, 'email verifier' 484, 'website email' 280"
+
+  # creator + demand v2 (added 2026-10-05)
+  - id: creator-good-linkedin
+    skill: creator-shortlist
+    fixture: briefcraft
+    fit: good
+    request: "Find LinkedIn and X creators who talk to agency owners about running an agency, with an email if they publish one."
+    anchors: "harvestapi/linkedin-profile-posts 6.4K MCP users, harvestapi/linkedin-post-search 5.8K, apidojo/tweet-scraper 5.2K"
+
+  - id: creator-good-sponsorships
+    skill: creator-shortlist
+    fixture: invoicepilot
+    fit: good
+    request: "Which newsletters and podcasts do freelancers read that I could sponsor?"
+    anchors: "newsletter and podcast sponsorship; Store search 'influencer' 273"
+
+  - id: demand-good-linkedin
+    skill: demand-signal-scan
+    fixture: shiftly
+    fit: good
+    request: "Is scheduling really a pain for restaurant managers? Check LinkedIn, reviews of the big scheduling apps, and how many people search for this."
+    anchors: "harvestapi/linkedin-post-search 5.8K MCP users, trustpilot 971, capterra 132, 'google trends' 635"
+
+  - id: demand-good-tiktok
+    skill: demand-signal-scan
+    fixture: habitloop
+    fit: good
+    request: "Why do people quit habit trackers? Check TikTok comments and tell me how many people search for this kind of app."
+    anchors: "'tiktok comment' 924, aitorsm/keyword-volume 864"
+
+  - id: demand-good-devtool
+    skill: demand-signal-scan
+    fixture: apiwatch
+    fit: good
+    request: "What do developers complain about with uptime monitoring tools? Look at GitHub issues, Stack Overflow and Hacker News."
+    anchors: "developer audience; ryanclinton/hackernews-search; GitHub issues feature requests"

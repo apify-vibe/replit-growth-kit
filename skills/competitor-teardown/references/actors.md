@@ -7,7 +7,7 @@ and prices change.
 
 Prices are free-tier list prices at test time; paid plans pay less. "Users" is 30-day users.
 
-## Step 2 and step 4: discovery and identifiers
+## Step 3 and step 4: discovery and identifiers
 
 ### `apify/google-search-scraper` (21K users, 99% success)
 
@@ -38,11 +38,15 @@ lead enrichment). Use `site:` queries to resolve identifiers for the other Actor
 ### `apify/website-content-crawler` (8.6K MCP users)
 
 ```json
-{"startUrls":[{"url":"https://competitor.com/pricing"}],"includeUrlGlobs":[{"glob":"**/pricing**"},{"glob":"**/plans**"}],"maxCrawlDepth":2,"maxCrawlPages":15,"crawlerType":"playwright:adaptive","saveMarkdown":true,"proxyConfiguration":{"useApifyProxy":true}}
+{"startUrls":[{"url":"https://competitor.com/pricing"}],"includeUrlGlobs":[{"glob":"**/pricing**"},{"glob":"**/plans**"}],"maxCrawlDepth":2,"maxCrawlPages":15,"crawlerType":"playwright:adaptive","dynamicContentWaitSecs":30,"htmlTransformer":"none","saveMarkdown":true,"proxyConfiguration":{"useApifyProxy":true}}
 ```
 
-`playwright:adaptive` matters: pricing grids are often client-rendered. Raise
-`dynamicContentWaitSecs` (default 10) when a grid comes back empty. Geo-gated pages (FreshBooks
+`playwright:adaptive` matters: pricing grids are often client-rendered. `htmlTransformer: "none"`
+and a 30-second `dynamicContentWaitSecs` kept the price cards that the defaults dropped on 3 of 4
+pages. The default `removeElementsCssSelector` strips navigation and footers, and with them the
+social links: override it when you need those links. A 403 needs the residential proxy
+(`proxyConfiguration.apifyProxyGroups: ["RESIDENTIAL"]`). Usage-billed: `maxTotalChargeUsd` does not
+bound it; `maxCrawlPages`, `timeout` and `memory` do, and residential proxy charges arrive late. Geo-gated pages (FreshBooks
 returned only a country selector) need the locale URL or `proxyConfiguration.apifyProxyCountry`
 set to the builder's market. Use the item's `crawl.loadedTime` as `fetched_at`. Do not point
 review-site Actors at pricing pages: a Capterra fallback returned nothing and still billed.
@@ -83,10 +87,12 @@ Add the category word: brand names collide. Pilot first.
 ### Hacker News: `ryanclinton/hackernews-search` (26 users, $0.005/story)
 
 ```json
-{"query":"Calendly","maxResults":20,"searchType":"date"}
+{"query":"\"Calendly\" scheduling","maxResults":20,"dateFrom":"2025-01-01"}
 ```
 
-Also surfaces "Show HN: open-source X alternative" launches, which are new competitors.
+Sorting by date alone returned the newest posts site-wide with no mention of the competitor:
+quote the name, add the category word, and use a date floor with relevance sort. Also surfaces
+"Show HN: open-source X alternative" launches, which are new competitors.
 
 ## D. Ads
 
@@ -94,15 +100,15 @@ Also surfaces "Show HN: open-source X alternative" launches, which are new compe
 |---|---|---|---|---|---|
 | Meta (Facebook, Instagram) | `apify/facebook-ads-scraper` | 5.4K MCP | per ad | `{"startUrls":[{"url":"https://www.facebook.com/<page>"}],"resultsLimit":20,"activeStatus":"active","isDetailsPerAd":true}` | Page URL from the competitor's own site. `curious_coder/facebook-ads-library-scraper` searches by keyword for category-wide scans. |
 | Google Ads Transparency | `solidcode/ads-transparency-scraper` | 540 | $0.001 start + $0.0015/ad | `{"searchQuery":"canva.com","maxResults":20}` | **Query by domain, never brand name** (a name search returned a different company), then check `advertiserName`. Returns format, first and last shown, `approxDaysShown`, preview links; no ad copy text. |
-| LinkedIn Ad Library | `memo23/linkedin-ads-scraper` | 153 | $0.0015/ad | `{"companies":["Notion"],"maxItems":20,"scrapeAdDetails":false}` | Returns ad `body` copy. `scrapeAdDetails` adds impressions and targeting at one extra request per ad. |
-| TikTok (EU/UK only) | `data_xplorer/tiktok-ads-library-fast` | 74 | $0.025 start + $0.0015/ad | `{"region":"FR","query":"Canva","queryType":"1","maxAds":20,"startDate":"2026-01-01"}` | `region` must be EU/EEA/UK. A US-only advertiser returns nothing. Largest fixed fee in this list. |
+| LinkedIn Ad Library | `memo23/linkedin-ads-scraper` | 153 | $0.0015/ad | `{"companies":["Notion"],"maxItems":20,"scrapeAdDetails":false}` | Takes names only: drop rows whose `advertiserName` is not the competitor. Returns ad `body` copy. `scrapeAdDetails` adds impressions and targeting at one extra request per ad. |
+| TikTok (EU/UK only) | `data_xplorer/tiktok-ads-library-fast` | 74 | $0.025 start + $0.0015/ad | `{"region":"FR","query":"CANVA PTY LTD","queryType":"<advertiser name type>","advertiserBizId":"<from the library URL>","maxAds":20,"startDate":"2026-01-01"}` | Use the Advertiser Name query type with the exact legal name and `advertiserBizId` when known; a keyword query returns namesakes. Read the live schema for the `queryType` value. `region` must be EU/EEA/UK. A US-only advertiser returns nothing. Largest fixed fee in this list. |
 
 ## E. Hiring and employees
 
 | Source | Actor | Users | Price | Minimal input | Notes |
 |---|---|---|---|---|---|
 | Careers page (Greenhouse, Lever, Ashby) | `bovi/greenhouse-lever-ashby-job-scraper` | 111 | $0.0015/job | `{"companies":[{"ats":"ashby","company":"notion"}],"maxJobsPerCompany":50,"includeDescriptions":false}` | Count `department` and `team`. `reportMode:true` with `keywords` adds a hiring-signal summary. |
-| LinkedIn jobs | `valig/linkedin-jobs-scraper` | 4.0K | $0.001 start + $0.0004/job | `{"companyName":["Notion"],"limit":50}` | Covers companies on other ATSs. |
+| LinkedIn jobs | `valig/linkedin-jobs-scraper` | 4.0K | $0.001 start + $0.0004/job | `{"companyId":["<numeric LinkedIn company ID>"],"limit":50}` | Use `companyId` from the identifier table, not `companyName` (names return namesakes; check the live schema for the field type). Covers companies on other ATSs. |
 | Glassdoor reviews | `kaix/glassdoor-reviews-scraper` | 80 | $0.00005/review | `{"urls":["https://www.glassdoor.com/Reviews/Microsoft-Reviews-E1651.htm"],"maxReviews":20,"includeCompanyData":true}` | Needs the `E<id>` URL. `cons` and `ratings.seniorLeadership` show morale and churn risk. |
 | Indeed company reviews | `memo23/apify-indeed-reviews` | 10 | $0.005 start + $0.0015/item | `{"startUrls":["https://www.indeed.com/cmp/Canva/reviews"],"maxItems":20,"includeReviewStats":true}` | Input default is 100,000; always set `maxItems`. Glassdoor covers most of the same ground. |
 

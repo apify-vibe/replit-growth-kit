@@ -1,6 +1,6 @@
 # Status: Replit Growth Kit skills
 
-_Last updated 2026-10-04 ~04:40 PDT, end of the overnight autonomous run._
+_Last updated 2026-10-04 evening: lead engine v2 (branch `lead-engine-lanes`, PR #2). Earlier sections describe v1.1._
 
 ## Where things stood before tonight
 
@@ -67,7 +67,7 @@ Round 1 fixes (27 items) are in `evals/runs/2026-10-04-r1/FIXES.md`, applied in 
 | competitor-teardown | **ship** | 3/3 cases; 7 angles live; wedges were real and specific |
 | demand-signal-scan | **ship** | 3/3 cases; r2 confirms the Reddit and YouTube fixes |
 | creator-shortlist | **ship** | 3/3 cases; r2 doubled yield on both platforms |
-| open-web-lead-engine | **ship with a stated yield, your call** | passed 3/3 in round 1 (10 and 15 leads), but after the correctness fixes the independent-restaurant case lands at 5 leads per 100 places (bar: 10). The fixes removed chains and staff that round 1 counted, so the lower number is the honest one. The skill now states this yield up front. v2 fix in the backlog: owner-name discovery from business websites. |
+| open-web-lead-engine | **v1.1: ship with a stated yield, your call** (superseded by v2, see below) | passed 3/3 in round 1 (10 and 15 leads), but after the correctness fixes the independent-restaurant case lands at 5 leads per 100 places (bar: 10). The fixes removed chains and staff that round 1 counted, so the lower number is the honest one. The skill now states this yield up front. v2 fix in the backlog: owner-name discovery from business websites. |
 
 
 
@@ -114,6 +114,96 @@ Apify rejects the run with HTTP 400 `invalid-input: Actor input must have conten
 "application/json"`. The overnight runs only worked when Agent added the header on its own.
 Fixed in commit `587b91b`: every SKILL.md and the runtime reference now state both required
 headers and the canonical run-start shape. Zip and Replit bundle rebuilt.
+
+## Post-run finding (2026-10-04 afternoon): Replit's native Apify connector fails on run starts
+
+In Lukas's test Repls, Agent reaches Apify through Replit's native connector (`connectorFetch`),
+not the `proxyFetch` interface the overnight runs used. A diagnostic matrix there showed every GET
+returns 200, and every run start returns `500 internal-server-error`, including
+`apify~hello-world` with `{}`, on both `/acts/` and `/actors/` paths. Account `apify-marketing`
+(BRONZE), the same account whose run starts worked overnight via `proxyFetch`.
+
+Fingerprint, reproduced directly against the Apify API: Apify returns exactly this 500 only when
+a POST carries a `Content-Encoding` header (`gzip`, `br`, `deflate`) whose body is not actually
+encoded. Every other malformed POST gets a 4xx with a clear message; a really gzipped body works.
+So the connector most likely adds a `Content-Encoding` header to POST bodies it does not compress.
+This is a Replit connector bug to report to Replit; it is not fixable in the skills.
+
+Skill changes (commit after `04e993c`): connection guidance is now connector-agnostic (follow the
+connection's own docs, User-Agent only where headers are allowed), plus a documented fallback: if
+reads work but run starts 500, the builder adds `APIFY_TOKEN` as a Replit Secret and Agent calls
+the API with a plain HTTP client. Attribution is lost on `connectorFetch` because it accepts no
+headers: worth raising with Replit (the connector could send its own identifying User-Agent).
+
+## Lead engine v2 (2026-10-04 evening, branch `lead-engine-lanes`)
+
+Rebuilt around four lanes plus a gap-filling step, on a live survey of 20 lead-gen Actors
+(`.replit-mirror/lead-sources.md`, local only; 25 run IDs, $0.66):
+
+- **Lane D (new), people by job title:** `pipelinelabs/lead-scraper-apollo-zoominfo-lusha-ppe`
+  first (~$0.001/lead, limited permissions; `code_crafter/leads-finder` returns 403 on admin
+  accounts), `harvestapi/linkedin-profile-search` second, `harvestapi/linkedin-company-employees`
+  for named companies.
+- **Step 6 (new), fill the gaps:** owner name from the site (`apify/ai-web-scraper`), email finder
+  (`scalelist/email-finder`), verifier (`bounceverify/bounceverify-email-verifier`).
+
+Same release, all four skills (Lukas's Replit test drive): Apify MCP server used first when
+connected; **one spend budget per job** instead of one form per step; `maxTotalChargeUsd` floor
+of $0.50 (low caps were failing runs and re-triggering approvals); one cap retry without a new form.
+
+| Case | Round | Lane | Leads | Cost | Result |
+|---|---|---|---|---|---|
+| lead-good-maps | v2r1 | A + step 6 | 10 | $1.34 | pass (v1.1 r3: 5) |
+| lead-good-search | v2r1 | A + step 6 | 44 | $3.33 | pass |
+| lead-bad-consumer | v2r1 | fit stop | 0 | $0 | pass |
+| lead-good-linkedin-title (new) | v2r1 | D LinkedIn | 29 | $1.12 | pass |
+| lead-good-domains (new) | v2r1 | B + step 6 | 19 | $1.40 | pass |
+| lead-good-maps | v2r2 | A | 13 | $2.18 | pass |
+| lead-good-domains | v2r2 | B + step 6 | 12 | $2.31 | pass |
+
+Verdict: **open-web-lead-engine v2 ships** (5/5 cases, regression 2/2). Fixes per round in
+`evals/runs/2026-10-04-v2r1/FIXES.md` and `v2r2/FIXES.md`. Known limits: the owner-name step pays
+off on agencies, rarely on restaurants (1 name from 53 sites); `ai-web-scraper` is the costliest
+step (~$0.02 per page). Bundle v1.2 staged in KV store `wg0mG9VcKHRQ9d3Py`, zip
+`~/Desktop/apify-growth-kit-skills-v1.2.zip`. Not yet run inside Replit.
+
+Grader fix: `grade.py` now splits multi-run `source_run_id` cells; the G4 bar is unchanged.
+
+v2 spend: survey $0.66 + evals $11.67 = **about $12.30**.
+
+## Creators + demand v2, review, v1.3 (2026-10-05, branch `creators-demand-v2`)
+
+- **Creator shortlist:** a B2B-voices track (LinkedIn, X, newsletters, podcasts) beside UGC video;
+  enterprise purchases still stop.
+- **Demand scan:** search volume, LinkedIn comments, TikTok comments (language only), incumbent
+  low-star reviews, GitHub issues and Stack Overflow; Reddit primary swapped to `fatihtahta`.
+- **Round cd1:** 11 cases, all pass the frozen bar, $5.20. Two passes sat on weak lanes (TikTok
+  comments, GitHub); the bar counts rows, not usefulness.
+- **Review:** 18 transcripts plus a Codex cold read, in `evals/runs/2026-10-05-cd1/REVIEW.md`.
+  The fix pass covers all four skills: one plan-first budget form, verification that always runs
+  and overrides finders, a FREE-tier cost trap in lane A, a chain rule limited to national and
+  regional brands, and the compliance section replaced by a B2B contact-data rule (Lukas).
+- **Not re-run after the fix pass**, by decision: Lukas tests v1.3 in Replit first, using
+  `docs/example-prompts.md`.
+- **v1.3 bundle:** staged in KV `wg0mG9VcKHRQ9d3Py`; zip and per-skill folders on the Desktop.
+
+## v1.4 (2026-10-05): round v13 fixes shipped
+
+- **Round v13:** all 19 cases after the review fix pass. 18 of 19 passed the mechanical gates, for
+  $21.34; `demand-bad-private` failed G2, which led to the amendment below. Details in
+  `evals/runs/2026-10-05-v13/FIXES.md`.
+- **Decisions D1 to D4,** shipped on Claude's recommendations, Lukas to confirm:
+  - Run caps follow the Actor's own minimum ($0.50 when unknown), and the in-flight check uses
+    estimated cost.
+  - Owner names come from a cheap About/Team page crawl that the agent reads itself, with
+    `ai-web-scraper` as the paid fallback.
+  - G2 is amended: a stopped demand scan may run one sizing run.
+  - Comment sources and GitHub are now optional.
+- **Security:** skills read only `plan.tier` from `/users/me`, because the response holds the proxy
+  password.
+- **Not yet evaluated:** the crawl-based owner-name step had one smoke test only (6 agency sites,
+  team or about page reached on 5, $0.003). The v1.4 fix pass itself has not been re-run.
+- **v1.4 bundle:** staged in KV `wg0mG9VcKHRQ9d3Py`; zip and per-skill folders on the Desktop.
 
 ## Spend
 

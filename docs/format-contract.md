@@ -53,10 +53,14 @@ Then six rules:
    credit and Replit's trust. Stop and explain when the motion does not apply.
 3. **Capability is discovered, never assumed.** Resolve Actor IDs and input schemas at runtime
    before building an input. Never invent an Actor name, an output field, a price, or a result.
-4. **Gate every spend, once per step.** Each workflow step that launches Actors gets one
-   approval through Replit's `AskQuestion` tool, listing every run in that step with its item and
-   dollar caps and the step total. Not one gate per Actor call (a teardown would show a founder
-   sixty prompts) and not one gate for the whole run.
+4. **Ask for one spend budget per job.** Settle the whole plan first (platforms, lanes, angle
+   groups), then one approval through Replit's `AskQuestion` tool, before the first paid run,
+   listing every step (probe, pilot, scale, follow-ups) with its Actors, item and dollar caps, any
+   condition ("runs only if the probe passes"), and the job total. Ask again only to exceed the
+   budget or change the plan. Mark paid steps "(paid)" in the workflow; do not call them gates.
+   Changed 2026-10-04 from one gate per step: in Replit test drives, per-step forms plus the
+   connector's own run approvals meant a builder clicked through every run, and cap-failure
+   retries re-triggered gates.
 5. **End on a reviewed artifact.** A CSV, a comparison table, a shortlist. Never a sent message,
    a live campaign, or a published page. Apollo ships an *inactive* sequence and so do we.
 6. **Keep `SKILL.md` under 500 lines.** Push Actor tables, field maps and cost detail into
@@ -98,13 +102,16 @@ On 2026-09-07 Jakub could not tell Replit runs apart from any other traffic: the
 
 Run options `maxItems` and `maxTotalChargeUsd` go on every run; the latter bounds spend for every
 pricing model, and several Actors ignore `maxItems` or default their own limits to 1,000+.
+`maxTotalChargeUsd` is twice the estimated cost and never below the Actor's own minimum ($0.50 when
+unknown): several Actors refuse lower caps, and a run that hits its cap stops with partial data.
+Usage-billed Actors ignore it; bound those with pages, memory and timeout.
 
 
 Every Actor these skills route to is pay-per-event, and the key is shared. So:
 
 - Hard default caps on rows, pages and profiles. Generous enough to be useful, small enough that
   a mistake costs cents.
-- Compute the expected item count before the run and show it with the gate.
+- Compute the expected item count before the run and show it in the budget form.
 - After the run, report actual rows returned and the run ID, so the builder can open the run in
   Apify Console and see what it cost.
 

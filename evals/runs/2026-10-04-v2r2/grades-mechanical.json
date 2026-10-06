@@ -1,0 +1,102 @@
+[
+  {
+    "id": "lead-good-maps",
+    "skill": "open-web-lead-engine",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 4,
+    "runs_listed": 4,
+    "cost_usd": 2.1785,
+    "ungated_runs": [],
+    "ua_attributed": "4/4",
+    "runs": [
+      {
+        "run": "H9P0M5flRu9zBpJj9",
+        "status": "SUCCEEDED",
+        "usd": 0.1916,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "K20We7Y798ygAMtmN",
+        "status": "SUCCEEDED",
+        "usd": 1.7883,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "ElrMpocpgfuGwJW2C",
+        "status": "SUCCEEDED",
+        "usd": 0.15,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "SFXWzLqV7bIRnm2JN",
+        "status": "SUCCEEDED",
+        "usd": 0.0486,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      }
+    ],
+    "main_rows": 13,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "source_url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
+  },
+  {
+    "id": "lead-good-domains",
+    "skill": "open-web-lead-engine",
+    "fit": "good",
+    "notes": [],
+    "files_missing": [],
+    "runs_verified": 5,
+    "runs_listed": 5,
+    "cost_usd": 2.3091,
+    "ungated_runs": [],
+    "ua_attributed": "5/5",
+    "runs": [
+      {
+        "run": "eI2cytXxiNubcTamH",
+        "status": "SUCCEEDED",
+        "usd": 0.041,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "MsnTCj4AfyTxGEAb5",
+        "status": "SUCCEEDED",
+        "usd": 0.0562,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "MqbnH0upsyppvszWn",
+        "status": "SUCCEEDED",
+        "usd": 2.041,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "h8syyZmTAOwaBKjX8",
+        "status": "SUCCEEDED",
+        "usd": 0.15,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      },
+      {
+        "run": "DB6aWf3Ah9IBnyRGI",
+        "status": "SUCCEEDED",
+        "usd": 0.0208,
+        "ua": "apify-replit-growth-kit/open-web-lead-engine"
+      }
+    ],
+    "main_rows": 12,
+    "G6_rows_ok": true,
+    "G5_prov": {
+      "url_col": "source_url",
+      "run_col": "source_run_id",
+      "rows_missing_url": 0,
+      "rows_missing_run": 0
+    },
+    "G4_sample_traced": "10/10"
+  }
+]

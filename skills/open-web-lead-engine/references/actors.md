@@ -1,17 +1,23 @@
 # Actor reference
 
-Every Actor listed here was verified public and not deprecated on 2026-09-16, and the lane A
-Actor re-checked on 2026-10-04. All are pay-per-event. Resolve the input schema at runtime before
-building an input; the fields below are the ones that matter, not the full list.
+Every Actor here was live-tested on 2026-10-04 (one tiny run each; full survey with run IDs kept
+with the kit's internal notes). All are pay-per-event and run with limited permissions. Resolve the
+input schema and the price at the builder's tier at runtime; the fields below are the ones that
+matter, not the full list.
 
-## Lane A: local and independent businesses
+**FREE-plan trap.** Lead events cost about 30x more on Apify's FREE plan than on paid tiers:
+`lead-scraped`, `lead-email-verified` and `social-profile-scraped` are $0.10 each on FREE in every
+Maps and crawl Actor below. Quote the builder's tier price (runtime reference, section 2), and on
+FREE prefer lane D's database source or the waterfall over Maps or crawl lead add-ons.
+
+## Lane A: businesses in a place
 
 ### `compass/crawler-google-places`
 
-The Maps Actor real MCP users pick (about 25K users in 90 days, against 2.8K for the wrapper
-below). Search, place details, website contacts and person enrichment run in one launch via its
-add-ons. `lukaskrivka/google-maps-with-contact-details` exposes the same fields and is a valid
-fallback if this one is unavailable.
+The Maps Actor real MCP users pick (about 25K users in 90 days). Search, place details, website
+contacts and person enrichment run in one launch via its add-ons. It is the only Maps Actor that
+returns website emails: `compass/google-maps-extractor` accepts `scrapeContacts` but returns no
+contact fields. `lukaskrivka/google-maps-with-contact-details` is a valid fallback.
 
 | Field | Type | Use |
 |---|---|---|
@@ -20,80 +26,220 @@ fallback if this one is unavailable.
 | `maxCrawledPlacesPerSearch` | integer | Default cap 50. The main cost lever. |
 | `language` | enum | `"en"` unless the builder specifies |
 | `scrapePlaceDetailPage` | boolean | `true`. Needed for phone, hours, full address. |
-| `skipClosedPlaces` | boolean | `true`. Closed businesses are dead leads. |
-| `website` | enum | `"withWebsite"` for email lists: filters before billing. `"withoutWebsite"` for builders selling websites or booking pages: phones, no emails. |
+| `skipClosedPlaces` | boolean | `true`. Closed businesses are dead leads. Each filter bills `filter-applied` per place. |
+| `website` | enum | `"withWebsite"` for email lists. `"withoutWebsite"` for builders selling websites or booking pages: phones, no emails. |
 | `scrapeContacts` | boolean | `true` to crawl each place's website for contacts (billed per place) |
 | `placeMinimumStars` | enum | `""`, `"three"`, `"four"` and half steps. Cheaper than post-filtering. |
-| `maximumLeadsEnrichmentRecords` | integer | People per business. Default 3. **Never `0`**, which disables enrichment. |
+| `maximumLeadsEnrichmentRecords` | integer | People per business. **Always set it** (3 is a good cap): the live default is `0`, which disables enrichment. |
+| `placeIds` | array | Enrich known places only: the second lane A run, after chains are dropped |
 | `leadsEnrichmentDepartments` | array | `[]` for any department |
-| `verifyLeadsEnrichmentEmails` | boolean | `true` on every run. This is the bounce-rate control. |
+| `verifyLeadsEnrichmentEmails` | boolean | `true` on every run |
 | `scrapeSocialMediaProfiles` | object | `{"instagrams": true, "facebooks": true}`. Each enabled network bills separately. |
 | `categoryFilterWords` | array | Narrows to Maps categories when the search term is ambiguous |
-| `countryCode` | enum | Use with `city` and `state` for precise targeting |
 
-Cost multiplier: `maxCrawledPlacesPerSearch x maximumLeadsEnrichmentRecords`. Gate above 200.
+Minimum `maxTotalChargeUsd`: $0.50. Cost multiplier: `places × maximumLeadsEnrichmentRecords`.
 
-Known behaviour: large chains are excluded from enrichment server side. Businesses with no website
-return an empty `leadsEnrichment[]`, which is expected rather than a failure.
+Known behaviour: enrichment titles are noisy for small businesses (servers, trainers, bussers
+alongside owners), and enrichment emails at restaurants were mostly catch-all or no-mailbox in
+testing, so the role check in step 7 and the verifier in step 6 both matter. Chains are **not**
+excluded from enrichment: national chains returned three corporate people each (37% of enriched
+records in one run), which is why lane A drops chains before enriching. Businesses with no website
+return an empty `leadsEnrichment[]`, which is expected rather than a failure. Social profiles bill
+per profile found.
 
 ## Lane B: company websites you already have
 
 ### `vdrmota/contact-info-scraper`
 
-Crawls a company site for contacts. Requires `startUrls` and `proxyConfig`.
+Crawls a company site for emails, phones and social links. Returns no person names; pair it with
+the waterfall's name step when the ICP needs a named person. About $0.006 per site.
 
 | Field | Type | Use |
 |---|---|---|
-| `startUrls` | array | `[{"url": "https://example.com"}]`, one entry per company |
-| `maxRequestsPerStartUrl` | integer | Default cap 20. Small-business sites are shallow. |
+| `startUrls` | array | `[{"url": "https://example.com"}]`, one entry per company. Required. |
+| `maxRequestsPerStartUrl` | integer | Default cap 10. Small-business sites are shallow. |
 | `maxDepth` | integer | `2` reaches /about, /team, /contact |
 | `sameDomain` | boolean | `true`. Stops the crawl wandering onto social sites. |
 | `mergeContacts` | boolean | `true`. One record per company rather than one per page. |
-| `maximumLeadsEnrichmentRecords` | integer | Default 3 |
-| `verifyLeadsEnrichmentEmails` | boolean | `true` |
-| `scrapeSocialMediaProfiles` | object | Optional, bills per network |
 | `useBrowser` | boolean | `true` only when a site renders contacts client side. Slower and dearer. |
-| `proxyConfig` | object | `{"useApifyProxy": true}` |
+| `proxyConfig` | object | `{"useApifyProxy": true}`. Required. |
+
+Leave its lead add-ons off; lane D and the waterfall find people more cheaply. Minimum
+`maxTotalChargeUsd`: $0.50.
 
 ## Lane C: companies you have to find first
 
 ### `apify/google-search-scraper`
-
-Requires `queries`. Newline-separated for multiple queries.
 
 | Field | Type | Use |
 |---|---|---|
 | `queries` | string | Newline-separated. Pattern plus qualifier plus exclusions. |
 | `maxPagesPerQuery` | integer | Default cap 2 |
 | `countryCode` | enum | Geographic targeting |
-| `languageCode` | enum | Result language |
-| `site` | string | Restricts to one domain |
-| `forceExactMatch` | boolean | Quotes the whole query |
-| `websiteContentScraper` | object | `{"enable": true}` pulls page content in the same run |
-| `maximumLeadsEnrichmentRecords` | integer | Enrichment inside the search run. Leave at `0` and use lane B instead, which gives better control. |
+| `wordsInTitle` | array | Business type, e.g. `["agency"]`, keeps listicles out |
+| `maximumLeadsEnrichmentRecords` | integer | Leave at `0`; lane B and the waterfall give better control |
 
-Strip directories, listicles, marketplaces and job boards from the results before feeding lane B.
-They are not companies and enriching them wastes budget.
+Strip directories, listicles, marketplaces and job boards before feeding lane B. Minimum
+`maxTotalChargeUsd`: $0.50.
 
-## Lane C alternative: people at named companies
+## Lane D: people by job title
 
-### `harvestapi/linkedin-profile-search`
+### Database source (default): `pipelinelabs/lead-scraper-apollo-zoominfo-lusha-ppe`
 
-Finds people by role at named companies without cookies. Use when the ICP is a job title at a
-company you already identified, and when those companies are large enough to have LinkedIn
-presence. Below that threshold, lane B finds more.
+About $0.001 per lead on every tier. In testing: title, person country and company size matched
+5/5, every email `deliverable`.
 
-### `code_crafter/leads-finder`
+| Field | Type | Use |
+|---|---|---|
+| `totalResults` | integer | **Always set.** Defaults to 1,000. |
+| `personTitleIncludes` | array | `["CTO", "Head of Engineering"]` |
+| `includeTitleVariants` | boolean | `true` widens to synonyms; check titles in step 7 |
+| `personLocationCountryIncludes` | array | Where the person sits |
+| `companyLocationCountryIncludes` | array | Where the company sits. Set it when the ICP geography is about the company: with person country alone, 2/5 companies were HQ'd elsewhere. |
+| `companyIndustryIncludes` | array | `["Computer Software"]` |
+| `companySizeIncludes` | array | `["51-200"]` |
+| `hasEmail` | boolean | `true` for email lists |
+| `emailStatusIncludes` | array | `["verified"]` |
 
-Bulk lead lookup with emails. A database-style fallback when the open-web lanes return too little.
-Overlaps what Apollo already sells, so reach for it last.
+Output: `firstName`, `lastName`, `title`, `seniority`, `email`, `emailStatus`, `phone`,
+`linkedinUrl`, `personCountry`, `companyName`, `companyDomain`, `companySize` (integer),
+`companyIndustry[]`.
+
+Coverage drops for micro businesses and outside the US and Western Europe (measured: about 5% of
+small Czech and Slovak ISPs). That is when lanes A to C or the LinkedIn source earn their cost.
+
+Alternatives, in order: `microworlds/leads-finder` (similar price, `max_result` cap, no email status
+field, only `domain_is_catchall`, so verify every email). Avoid `code_crafter/leads-finder` (full
+permissions: refused with 403 on some accounts) and
+`braveleads/leads-finder-linkedin-apollo-leads-generator` (100-lead minimum, ignored `maxItems`,
+size buckets mislabelled).
+
+### LinkedIn source: `harvestapi/linkedin-profile-search`
+
+Live LinkedIn profiles with exact title, location, company and headcount filters. About 8 to 10x
+the database price: $0.008 per profile with email plus a search page ($0.05 at the top tier, $0.10 on
+FREE) charged whole per 25 profiles, so pilot with exactly one page.
+
+| Field | Type | Use |
+|---|---|---|
+| `profileScraperMode` | enum | `"Full + email search"` for leads; `"Short"` for counting only |
+| `currentJobTitles` | array | The title filter (`searchQuery` is fuzzy text, not a filter) |
+| `locations` | array | Plain text. Use `"United Kingdom"`, not `"UK"` (resolves to Ukraine). |
+| `currentCompanies` | array | Full LinkedIn company URLs |
+| `companyHeadcount` | array | LinkedIn size letters: A self-employed, B 1-10, C 11-50, D 51-200, E 201-500, F 501-1,000, G 1,001-5,000, H 5,001-10,000, I 10,001+ |
+| `companyHeadquarterLocations` | array | Company HQ location, plain text; use it instead of a separate HQ lookup |
+| `industryIds` | array | Filters the **person's** industry, not the company's: in testing it let energy, robotics and insurance firms through |
+| `maxItems`, `takePages` | integer | Set both |
+
+Output: `firstName`, `lastName`, `linkedinUrl`, `headline`, `location.parsed.countryCode`,
+`currentPosition[]` (`position`, `companyName`, `companyLinkedinUrl`), `companyWebsites[]`, and
+`emails[]` with `status` (`valid`, `risky`) and `qualityScore`. Sample: 3/5 valid, 2/5 risky.
+
+Company size is in the full output at `currentPosition[].company.employeeCount`. Use the company
+page's own `website` for domain checks: `companyWebsites[]` holds unrelated domains. The company's
+headquarters country is not in the profile: when company geography is required, check it with
+`harvestapi/linkedin-company` ($0.003 per company, `locations[]`) or send the row to review.
+
+### Named companies: `harvestapi/linkedin-company-employees`
+
+When the builder names the companies (or lane C found them): people at each company by title.
+
+| Field | Type | Use |
+|---|---|---|
+| `profileScraperMode` | enum | `"Full + email search ($12 per 1k)"`: the value includes the price text |
+| `companies` | array | Company names or LinkedIn URLs |
+| `jobTitles` | array | Title filter (not `currentJobTitles`) |
+| `maxItemsPerCompany` | integer | Cap per company |
+| `maxItems`, `takePages` | integer | Set both |
+
+$0.008 per profile with email plus a $0.015 start fee per run, so batch companies in one run.
+Sample: 5/5 valid emails, all current at the company.
+
+Do not use `harvestapi/linkedin-company-search` to find companies by country: its location filter
+returned US companies for "Germany". Find companies with the database source or lane C.
+
+## Enrichment waterfall
+
+### Email finder: `scalelist/email-finder`
+
+```json
+{"leads": [{"first_name": "Ana", "last_name": "Novak", "company_domain": "example.com"}]}
+```
+
+$0.015 per result at the top tier ($0.03 on FREE), 98% run success, `email_status` `Valid` or `Risky`.
+Send every result through the verifier, `Valid` included: in testing it returned `Valid` on a
+domain the verifier marks catch-all. Lookups that find nothing are
+billed too. In testing it once returned an address on a different company's domain; accept only
+emails on the company's own domain. Alternative:
+`clearpath/email-finder-api` (`people: [{firstName, surname, domain}]`, filter on `isSafeToSend`,
+billed per pattern tried, 84% run success).
+
+### Verifier: `bounceverify/bounceverify-email-verifier`
+
+```json
+{"emails": ["ana@example.com"]}
+```
+
+About $0.0009 per email. `status`: `valid`, `risky`, `invalid`, `unknown`, plus `is_catch_all`.
+The only verifier tested that marked a nonexistent mailbox `invalid`. Also takes `inputDatasetId` +
+`emailField` to verify a previous run's dataset. Avoid `michael.g/email-verifier-validator` on
+FREE ($0.10 per email) and because it cannot tell a missing mailbox from an unreachable server.
+
+### Owner or manager name from a website: `apify/website-content-crawler`
+
+Crawl the pages that name people, then read them yourself:
+
+```json
+{"startUrls":[{"url":"https://example.com/"}],"crawlerType":"cheerio","maxCrawlDepth":1,"maxCrawlPages":30,
+ "includeUrlGlobs":[{"glob":"https://example.com/**about**"},{"glob":"https://example.com/**team**"},{"glob":"https://example.com/**people**"},{"glob":"https://example.com/**contact**"}],
+ "htmlTransformer":"none","removeElementsCssSelector":"script, style, noscript, svg"}
+```
+
+One run covers a batch of sites (one start URL and its globs each); `maxCrawlPages` caps the whole
+run, so set it to about 5 per site. Usage-billed: about $0.0004 per page (6 sites, 17 pages:
+$0.0025 in a smoke test, reaching the team or about page on 5 of 6), bounded by pages, `timeout`
+and `memory`, not by `maxTotalChargeUsd`. `htmlTransformer: "none"` keeps headings and cards the
+default readable-text transform drops. Read each page's text for names next to titles. Home pages
+also carry client testimonials ("Owner & Managing Director, <client>"): a name counts only on the
+business's own about, team or people page, or where the page says the person runs this business.
+Sites that render their team with scripts return little with `cheerio`; use `playwright:adaptive`
+for those, or the fallback below.
+
+### Fallback: `apify/ai-web-scraper`
+
+For sites the crawl could not read. About $0.02 per page item it writes, including pages where it
+found nobody: $0.04 to $0.10 per site, which made it 87% of one job's spend. Founders found on 11
+of 37 Maps-sourced agency sites in one run.
+
+```json
+{"startUrls": [{"url": "https://example.com/"}], "extractionMode": "agentic",
+ "prompt": "Return JSON {\"business_type\": string, \"people\": [{\"name\": string, \"title\": string, \"url\": string}]}. business_type: what this business is, in a few words. people: only people the site says currently own, founded or manage THIS business, or hold this title: <ICP buyer title>, with the URL of the page that says so. Exclude clients, case-study subjects, testimonials, partners and past owners. Empty list if none is stated.",
+ "maxPagesToVisit": 5, "maxCrawlDepth": 2}
+```
+
+Run option `timeout: 3600` and at most 25 sites per run: the default 900-second timeout cut off
+batches of 53 and 132 sites. Use `agentic` (`single` does not follow links). Spot-check 3 hits per
+batch by fetching the cited page: it has named a client from a portfolio page as founder, and a
+1979 co-founder as current owner.
+
+It writes one item per page, so read the output per site:
+- Take `business_type` only from the item for the start URL (the homepage). On other pages it
+  describes whatever the page is about, often a client ("airline flask brand").
+- Drop any person whose cited URL is a work, case-study, portfolio, clients or projects page: in
+  testing 4 of 20 names came from such pages.
+- A site with no items and no error is missing data: the row goes to review, not excluded.
+
+The homepage `business_type` is the evidence for a business-type criterion in lane B, where the
+contact crawl returns no description of the business.
 
 ## Output fields worth mapping
 
 Names vary by Actor. Read a sample row before mapping rather than assuming.
 
-- Company: `title`, `companyName`, or the hostname of `website`
-- Person: `firstName`, `lastName`, `jobTitle` inside `leadsEnrichment[]`
-- Email: `email` inside `leadsEnrichment[]`, with a verification flag alongside
-- Provenance: `companyWebsite` inside `leadsEnrichment[]`, which is what the spurious-match filter
+- Company: `title`, `companyName`, `organization_name`, or the hostname of `website`
+- Person: `firstName`/`lastName` (or `first_name`/`last_name`), `jobTitle`, `title` or `position`
+- Email status, kept raw in `email_status`: `emailStatus` (database), `emails[].status`
+  (LinkedIn), `emailVerification.result` inside `leadsEnrichment[]` (Maps; `ok` is a pass),
+  `email_status` (finder), `status` (verifier)
+- Provenance: `companyWebsite` inside `leadsEnrichment[]` is what the spurious-match filter
   compares against the company's own hostname

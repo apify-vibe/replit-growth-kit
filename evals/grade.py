@@ -64,9 +64,10 @@ def grade(case, rdir):
         datasets[rid] = d.get('defaultDatasetId')
     res.update(runs_verified=len(verified), runs_listed=len(runs), cost_usd=round(cost, 4), ungated_runs=ungated,
                ua_attributed=f'{ua_ok}/{len(verified)}', runs=verified)
-    # G2 mechanical part: bad-fit cases must have zero collection runs (one probe allowed for demand)
+    # G2 mechanical part: bad-fit cases must have zero collection runs. Demand may run its probe plus
+    # one search-volume run (acceptance.md amendment 2026-10-05); neither collects signals.
     if fit == 'bad':
-        allowed = 1 if skill == 'demand-signal-scan' else 0
+        allowed = 2 if skill == 'demand-signal-scan' else 0
         res['G2_runs_ok'] = len(verified) <= allowed
     # G5/G6 on the main CSV
     p = os.path.join(cdir, main_csv); rows = []
@@ -85,16 +86,20 @@ def grade(case, rdir):
         # G4: sample rows, check a distinctive value appears in the cited run's dataset
         random.seed(7); sample = random.sample(rows, min(10, len(rows))); hits = 0; cache = {}
         for r in sample:
-            rid = (r.get(runc) or '').strip() if runc else ''
-            ds = datasets.get(rid)
-            if not ds:
-                try: ds = api(f'/actor-runs/{rid}')['data']['defaultDatasetId'] if rid else None
-                except Exception: ds = None
-            if not ds: continue
-            if ds not in cache:
-                try: cache[ds] = json.dumps(api(f'/datasets/{ds}/items?clean=1&limit=5000')).lower()
-                except Exception: cache[ds] = ''
-            blob = cache[ds]
+            # A row filled from several runs (lead engine step 6) cites them all: "a; b" (also "+" or ",")
+            rids = [x for x in re.split(r'[;,+\s]+', (r.get(runc) or '') if runc else '') if x]
+            blob = ''
+            for rid in rids:
+                ds = datasets.get(rid)
+                if not ds:
+                    try: ds = api(f'/actor-runs/{rid}')['data']['defaultDatasetId']
+                    except Exception: ds = None
+                if not ds: continue
+                if ds not in cache:
+                    try: cache[ds] = json.dumps(api(f'/datasets/{ds}/items?clean=1&limit=5000')).lower()
+                    except Exception: cache[ds] = ''
+                blob += cache[ds]
+            if not blob: continue
             probes = [r.get(k, '') for k in ('email', 'contact_email', 'url', 'source_url', 'profile_url', 'handle', 'quote', 'text', 'company_domain', 'title')]
             probes = [v.strip().lower() for v in probes if v and len(v.strip()) >= 6]
             if any((v[:80] in blob) or (v.split('?')[0].rstrip('/')[-40:] in blob) for v in probes): hits += 1
