@@ -29,6 +29,7 @@ Actor is unavailable, as the runtime reference describes.
 |---|---|
 | Find competitors, resolve identifiers | `apify/google-search-scraper` |
 | Pricing pages | `apify/website-content-crawler` |
+| Numeric LinkedIn company ID, headcount | `harvestapi/linkedin-company` |
 | Every other angle | the exact ID listed for that source in [references/actors.md](references/actors.md) |
 
 If the Apify MCP server is connected, call Apify through it (tool mapping in the runtime
@@ -59,7 +60,8 @@ Classify the app, because it decides which angles matter in step 2: **B2B softwa
 or mobile app**, **local business**, or **developer tool**.
 
 Show the summary to the builder and let them correct it once. Ask which competitors they already
-know about. Their answer is a seed, not the answer.
+know about. Their answer is a seed, not the answer, and so are competitors named in the request
+itself.
 
 ### 2. Pick the research angles and ask for the budget
 
@@ -89,7 +91,9 @@ a free question inside the plan; a sixth competitor or a new angle group is a pl
 ### 3. Find the real competitors and confirm 3 to 5 (paid)
 
 Founders name the well-funded competitor and miss the cheap one taking their customers. Search
-before trusting the seed list. Run one `apify/google-search-scraper` step with three query
+before trusting the seed list, even when the builder named every competitor: a teardown limited
+to the named two missed the substitutes users switched to. This search is paid, so it runs only
+after the budget form is approved. Run one `apify/google-search-scraper` step with three query
 shapes:
 
 - `best <category> software` and `<category> app` (who ranks)
@@ -98,6 +102,8 @@ shapes:
 
 Drop directories, listicles and marketplaces. Show 8 to 12 candidates with one line each and ask
 the builder to keep 3 to 5. More than five makes a table nobody reads and a bill nobody wanted.
+When the builder named competitors, keep theirs and offer the strongest extra candidates in the
+same free question. Deliver fewer than three only when the builder declines the extras.
 
 If the search finds no comparable paid alternatives, say so and stop: a teardown of an empty
 category would mislead. Decide this from the search results, not from memory.
@@ -106,8 +112,13 @@ category would mislead. Decide this from the search results, not from memory.
 
 Most review, ads and company Actors need an ID the builder will not know: a G2 slug, a Capterra
 numeric ID, a Trustpilot domain, an App Store ID or Play package, a Glassdoor `E<id>`, a LinkedIn
-company slug, an ATS board slug, a Facebook page. Resolve the official pricing URL here too: the
+company page, an ATS board slug, a Facebook page. Resolve the official pricing URL here too: the
 pricing link in the competitor's own site navigation, or `site:<domain> pricing`.
+
+When hiring is in scope, resolve each competitor's ATS board slug and its **numeric** LinkedIn
+company ID: run `harvestapi/linkedin-company` on the LinkedIn page linked from their own site and
+read its `id` (the jobs Actor takes `companyId`, not the slug). In step 5, run the LinkedIn jobs
+Actor for every competitor whose ATS board is unresolved.
 
 Resolve them in one step with `apify/google-search-scraper`, using one `site:` query per
 competitor and source (for example `site:g2.com/products notion reviews`, `site:glassdoor.com/Reviews
@@ -147,8 +158,9 @@ Collection notes that matter:
   secondary evidence, labelled as such, never a substitute for an official one.
 - **Reviews and complaints:** pull the newest reviews and a separate low-star slice. The low-star
   slice is where the wedge lives; the newest slice keeps it honest. On G2 the low-rating sort
-  returned mostly 5-star reviews (its rating comes from the reviewer's NPS answer), and Capterra
-  has no date filter, so B2B low-star slices are thin or old: filter by the review's own rating and
+  returned mostly 5-star reviews (its rating comes from the reviewer's NPS answer), so G2 gets no
+  low-star run: keep the 1 and 2 star reviews from its newest slice. Capterra has no date filter,
+  so its low-star slice is thin or old (10 reviews at most): filter by the review's own rating and
   date yourself, and lean on app-store and Reddit complaints when they come back empty. Expect
   vendor-solicited reviews on G2 for large vendors (42 of 47 for one); weigh them accordingly. A recent low-star review sits
   in both slices: deduplicate on review ID before counting themes. Keep the low-star slice recent

@@ -106,7 +106,13 @@ Lane D's two sources trade price for precision. The database costs about $0.001 
 returned deliverable emails in testing; LinkedIn costs 8 to 10x more and gives live profiles with
 exact title and location filters. Pilot the database first. Go straight to LinkedIn when the
 builder needs a LinkedIn URL on every row or the ICP sits outside the US and Western Europe, and
-switch to it when the database pilot misses the bar. For micro businesses, use lanes A to C:
+switch to it when the database pilot misses the bar. LinkedIn's headcount filter is approximate
+(22 of 50 rows outside the requested size in one test), and lane D cannot see a business type
+narrower than an industry ("SaaS" within software). When the ICP needs both, pilot company-first:
+the database with `companySizeIncludes` and the company-country filter, then
+`harvestapi/linkedin-company-employees` by title at the companies that pass. Or make the
+business type a signal rather than a required criterion, and say so in the form. For micro
+businesses, use lanes A to C:
 databases cover them poorly. When agencies or studios fit both A and C, use A in a city and C
 when the ICP has no city.
 
@@ -135,7 +141,10 @@ For lane C, keep listicles out of the search before they cost a pilot: put the b
 `wordsInTitle` (for example `["agency"]`) and exclude directory sites in the query
 (`-jobs -clutch -designrush -upwork -glassdoor`).
 
-For lane D on LinkedIn, a search page bills whole (25 profiles), so the pilot is one page.
+For lane D on LinkedIn, a search page bills whole (25 profiles), so the pilot is one page. Its
+one rewrite changes only the titles, the headcount letter or the HQ locations. `industryIds` and a
+Boolean `searchQuery` do not target company type: one rewrite with both cost a full page and
+still missed the bar.
 
 ### 5. Scale (paid)
 
@@ -256,12 +265,17 @@ Deduplicate leads on lowercased email plus person, or on lowercased first name +
 company domain when there is no email. A shared business inbox (`info@`) does not merge two named
 people or two branches. Never on domain alone: two branches of one business stay two rows.
 
+Take `job_title` from the provider's `jobTitle`. Only when it is empty, use the `headline` and
+set `title_source` to `headline` (otherwise `job_title`): a headline is self-description, and one
+turned a company owner into "General Manager". Sorting code works on fields only. Never write a
+person's name into code to change a title or force a row into a file.
+
 ### 8. Deliver and hand off
 
 Write to the workspace root, even after an empty or stopped pilot (CSVs keep their header):
 
-- `leads.csv`: `company`, `company_domain`, `first_name`, `last_name`, `job_title`, `email`,
-  `email_type`, `email_status` (raw provider or verifier value), `email_source` (`provider`,
+- `leads.csv`: `company`, `company_domain`, `first_name`, `last_name`, `job_title`,
+  `title_source`, `email`, `email_type`, `email_status` (raw provider or verifier value), `email_source` (`provider`,
   `site`, `finder`), `phone`, `linkedin_url`, `city`, `country`, `score`, `score_components`,
   `source_query`, `source_url`, `source_actor`, `source_run_id`. Sorted by score. When a row
   draws on several runs (step 6), list every Actor and run ID in source order, separated by
@@ -269,10 +283,20 @@ Write to the workspace root, even after an empty or stopped pilot (CSVs keep the
   status (the verifier's when it ran).
 - `review_needed_leads.csv`: same columns plus `review_reason`. Named people first.
 - `excluded_leads.csv`: same columns plus `exclusion_reason`.
-- `run_metadata.json`: the ICP criteria, lane, run and dataset IDs, caps, the budget and its
-  answer, counts per stage (`sourced_places` and `sourced_people` separately, `excluded`,
-  `review_needed`, `gap_filled`, `duplicates_removed`, `leads`), and actual usage. After a stop at
-  the fit check it holds the verdict, the reason and zero counts.
+- `run_metadata.json`: the ICP criteria, lane, runs, the budget and its answer, counts per stage,
+  and actual usage, in this shape:
+
+  ```json
+  {"icp": {"required": [], "signals": []}, "lane": "D", "budget_usd": 6, "budget_answer": "",
+   "runs": [{"id": "", "actor": "", "dataset_id": "", "step": "", "max_total_charge_usd": 0.5,
+             "max_items": 25, "usd": 0.0, "cost_basis": "exact"}],
+   "counts": {"sourced_places": 0, "sourced_people": 0, "excluded": 0, "review_needed": 0,
+              "gap_filled": 0, "duplicates_removed": 0, "leads": 0},
+   "total_usd": 0.0}
+  ```
+
+  `duplicates_removed` counts rows actually merged, never a balancing figure. After a stop at the
+  fit check the file holds the verdict, the reason and zero counts.
 - `growth-kit-approvals.jsonl`: written once a budget form was shown (runtime reference,
   section 3).
 

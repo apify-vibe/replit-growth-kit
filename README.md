@@ -94,7 +94,7 @@ inputs, prices, traps and fallbacks. The main ones:
 
 ## Status
 
-Version 1.4. These skills are the Apify side of the Apify and Replit partnership; Replit publishes
+Version 1.5. These skills are the Apify side of the Apify and Replit partnership; Replit publishes
 them on Growth Kit after review.
 
 Backport to [`apify/awesome-skills`](https://github.com/apify/awesome-skills) happens after that

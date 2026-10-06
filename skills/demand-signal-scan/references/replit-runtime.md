@@ -12,12 +12,15 @@ connection. It is the path that starts runs reliably from Replit. Map the steps 
 | Step | MCP tool |
 |---|---|
 | Schema, pricing, stats | `fetch-actor-details` (`output: {inputSchema, pricing, stats}`) |
-| Start a run | `call-actor` with `actor`, `input`, and `callOptions: {maxTotalChargeUsd, maxItems}`; `waitSecs: 0` for anything slower than a few seconds |
-| Poll a run | `get-actor-run` with `waitSecs` up to 45, repeated until a terminal status |
+| Account tier | `fetch-actor-details` → `pricing.userTier`, the tier of the account MCP runs on (section 2) |
+| Start a run | `call-actor` with `actor`, `input`, and `callOptions: {maxTotalChargeUsd, maxItems, memory, timeout}`; `waitSecs: 0` for anything slower than a few seconds |
+| Poll a run | `get-actor-run` with `waitSecs` 30 or less (Replit's code runner returned null at 45), repeated until a terminal status. A null return means the run is still going: poll again |
 | Read results | `get-dataset-items` with `datasetId`, `limit`, `fields` |
+| List runs | `get-actor-run-list` with `actorId` and `desc: true`, 10 per page (`offset` for more) |
 
 Runs started through MCP are counted by their origin, so no User-Agent is needed there. Use the
 exact Actor IDs from `actors.md`; `search-actors` is only for an Actor that is unavailable.
+`get-actor-run` returns no dollar cost on any run; section 3 says what to record instead.
 
 Without MCP, use the workspace's Apify connection (Replit's `integrations` skill shows it) and call Apify
 through whatever interface that connection documents, following its own rules for paths, bodies
@@ -28,10 +31,12 @@ Apify facts that hold for any interface:
 
 - Start a run with `POST /v2/acts/<owner>~<name>/runs`, run options in the query
   (`maxItems`, `maxTotalChargeUsd`), and the Actor input as a JSON **object**.
-- Before the first paid step, make one `GET /v2/users/me`. It proves the connection works and
-  gives the account tier for pricing (section 2). Read only `plan.tier` from it: the response also
-  holds the account's proxy password, so never print, log or save the response. A job that stops
-  at a free fit check needs no call at all.
+- When this connection starts the runs, make one `GET /v2/users/me` before the first paid step.
+  It proves the connection works and gives the account tier for pricing (section 2). Read only
+  `plan.tier` from it: the response also holds the account's proxy password, so never print, log
+  or save the response. With MCP starting the runs, skip it: a workspace connection can belong to
+  a different Apify account (BRONZE on the connection, DIAMOND on MCP in testing). A job that
+  stops at a free fit check needs no call at all.
 - If the interface lets you set headers, send `User-Agent: apify-replit-growth-kit/<skill-name>`
   on every request so Apify can count runs that come from Replit. If it doesn't, skip it.
 
@@ -54,9 +59,11 @@ Before building any input: resolve the Actor named in `actors.md`, read its curr
 schema, check that the chosen mode returns the row type you need (posts, not hashtag metadata),
 and read its current pricing for every event and add-on you plan to enable.
 
-Quote the builder's real price, not the list price. Read the account tier from
-`GET /v2/users/me` → `plan.tier` (FREE, BRONZE, SILVER, GOLD, PLATINUM or DIAMOND; use `tier`,
-not `plan.id`, which can differ). Then read the per-event price for that tier from
+Quote the builder's real price, not the list price, read through the same path that starts the
+runs. On MCP, `fetch-actor-details` gives `pricing.userTier` and each event's price per tier.
+Otherwise read the tier from `GET /v2/users/me` → `plan.tier` (FREE, BRONZE, SILVER, GOLD,
+PLATINUM or DIAMOND; use `tier`, not `plan.id`, which can differ). Never price runs with a tier
+read through a different connection. Without MCP, read the per-event price for that tier from
 `GET /v2/acts/<owner>~<name>` at
 `pricingInfos[-1].pricingPerEvent.actorChargeEvents.<event>.eventTieredPricingUsd.<tier>.tieredEventPriceUsd`.
 An event with no tiered prices carries one flat `eventPriceUsd` for every tier; use it. If the
@@ -87,7 +94,8 @@ plan. Report each step's runs and spend in chat as you go, so the builder can st
 point. Confirmations that cost nothing (the product summary, the competitor shortlist, the angles
 to cover) are ordinary questions, not spend forms. When the builder names the platforms or sources
 to use, those are the plan; suggest one more from the skill's table only as a free question. If
-the named sources fail their pilots, offer the strongest other source once, as a plan change.
+every source the builder named fails its pilot, offer the strongest unnamed source for this
+audience from the skill's table once, as a plan-change form, before writing the report.
 
 **Caps on every run.** Set the API run option `maxTotalChargeUsd` to twice the run's estimated
 cost, and never below the Actor's own minimum: several Actors refuse a lower cap
@@ -124,14 +132,46 @@ Running the step:
   and read usage-billed runs once more at the end of the job.
   Read the item count from the dataset (`GET /v2/datasets/<id>` → `itemCount`) when the run's own
   count is empty.
+- A run's `usageTotalUsd` is its exact cost. When a read returns null or no such field (always on
+  MCP; on a connection that does not own a usage-billed run), record an estimate instead:
+  charged items × the `userTier` event price plus the start fee for pay-per-event runs, and
+  `stats.computeUnits` for usage-billed ones. Mark each run's `cost_basis` (`exact` or `estimate`) and link the
+  runs in Apify Console, where the builder sees the real charge. Never close a job with "cost
+  unavailable".
+- Label each run (the handle, competitor, term or URL it covers) from its stored input or the
+  author field of its dataset, never from launch order: parallel launches finish out of order.
 
 Rules that make the budget mean something:
 - Run only what the approved plan covers. Anything outside it is a new form.
 - A cancelled, declined or unanswered form is not approval. Never answer for the builder.
-- Once a form has been shown, append it, its answer, and each step's run IDs and spend to
-  `growth-kit-approvals.jsonl` in the workspace root. A job that stopped before any form writes no
-  approvals file.
 - If a run was launched outside the plan, abort it, keep what it returned, and report it.
+
+**The approvals ledger.** `growth-kit-approvals.jsonl` in the workspace root holds one JSON
+object per line, appended when the event happens. Never reorder or rewrite earlier lines. Every
+line has `ts` (ISO 8601, UTC), `event` and `run_ids` (`[]` when none):
+
+| `event` | When | Other fields |
+|---|---|---|
+| `form_shown` | Before the first paid run | `steps` (each `step`, `actors`, `input`, `expected_items`, `ceiling_usd`, `condition`), `total_usd` |
+| `answer` | When the builder answers | `answer` (their words) |
+| `run_started` | Right after each launch | `step`, `actor`, `label` |
+| `plan_change` | A new form inside the job | as `form_shown`, plus `reason` |
+| `run_reconciled` | A run of this job found missing at the end | `step`, `actor`, `label` |
+| `completed` | Last line | `runs` (each `run_id`, `usd`, `cost_basis`: `exact` or `estimate`), `total_usd` |
+
+```jsonl
+{"ts":"2026-10-05T23:48:02Z","event":"form_shown","run_ids":[],"steps":[{"step":"pilot","actors":["clockworks/tiktok-scraper"],"input":"3 terms x 6 videos, past month","expected_items":18,"ceiling_usd":0.5,"condition":null}],"total_usd":6}
+{"ts":"2026-10-05T23:49:01Z","event":"answer","run_ids":[],"answer":"Approve up to $6"}
+{"ts":"2026-10-05T23:49:13Z","event":"run_started","run_ids":["<run id>"],"step":"pilot","actor":"clockworks/tiktok-scraper","label":"study habits, study with me, exam prep"}
+```
+
+Keep lines small: never put dataset rows in the ledger (Replit rejects entries over 1 MB). A job
+that stopped before any form writes no approvals file.
+
+**Reconcile before delivering.** For each Actor the job used, list the account's runs newest
+first back to the `form_shown` time, and match them to the ledger by Actor and stored input.
+A run of this job that is not in the ledger gets a `run_reconciled` line; use its data and name
+it in the report. Leave other jobs' runs alone.
 
 ## 4. Pilot uncertain lanes
 
@@ -153,7 +193,7 @@ counts as relevant. Then count:
   | 30% | Conversational sources: Reddit, X, Hacker News, and comments on YouTube, TikTok and LinkedIn |
 
 - **Too small to judge:** fewer than 10 units back is inconclusive, not a pass or a fail. Use the
-  rewrite to widen the query.
+  lane's one rewrite to widen the query; if the rewrite is below the bar, stop the lane.
 - **Below the bar:** rewrite the query once using what the pilot showed. Below the bar twice:
   stop that lane and report the pilot; do not scale it. A failed lane is a collection failure, not
   proof that nobody cares. Rows the pilot fetched in full may still be quoted or used, labelled as
