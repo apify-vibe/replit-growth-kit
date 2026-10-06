@@ -184,7 +184,7 @@ v2 spend: survey $0.66 + evals $11.67 = **about $12.30**.
   and overrides finders, a FREE-tier cost trap in lane A, a chain rule limited to national and
   regional brands, and the compliance section replaced by a B2B contact-data rule (Lukas).
 - **Not re-run after the fix pass**, by decision: Lukas tests v1.3 in Replit first, using
-  `docs/replit-handover-prompts.md`.
+  `docs/example-prompts.md`.
 - **v1.3 bundle:** staged in KV `wg0mG9VcKHRQ9d3Py`; zip and per-skill folders on the Desktop.
 
 ## v1.4 (2026-10-05): round v13 fixes shipped
